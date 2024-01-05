@@ -82,11 +82,57 @@ module power_strip_buttresses() {
 	}
 }
 
-tray([117.0, 38.5, 12.0], r1=8.5, r2=2, r_inner=0.5, thickness=2.25, lip_thickness=1, ridge_height=1);
+module strain_relief_collar(size, r, bevel) {
+	dist = size.y - 2 * r;
+	cube1_size = [size.y, size.z - 2 * r, size.x - bevel];
+	cube2_size = [size.y - 2 * bevel, size.z - 2 * r, size.x];
 
-for (x=[27:28.5:84]) {
-	translate([x, 19.25, 1]) ground_channel([8, 8, 15.5], thickness=1.5, wing_size=[1.25, 4.5, 12.5]);
+	rotate([-90, 0, 90]) translate([0, -r, 0]) hull() {
+		translate([-dist / 2, 0, 0]) cylinder(h=size.x - bevel, r=r);
+		translate([dist / 2, 0, 0]) cylinder(h=size.x - bevel, r=r);
+		translate([-dist / 2, 0, 0]) cylinder(h=size.x, r=r - bevel);
+		translate([dist / 2, 0, 0]) cylinder(h=size.x, r=r - bevel);
+
+		translate([0, -(r + cube1_size.y / 2), cube1_size.z / 2]) cube(cube1_size, center=true);
+		translate([0, -(r + cube2_size.y / 2), cube2_size.z / 2]) cube(cube2_size, center=true);
+	}
 }
 
-translate([33.5, 1.25, 1]) power_strip_buttresses();
-translate([33.5, 38.5 - 1.25, 1]) mirror([0, 1, 0]) power_strip_buttresses();
+module strain_relief_collar_cutout(size, r) {
+	dist = size.y - 2 * r;
+	cube_size = [size.y, size.z, size.x];
+
+	rotate([-90, 0, 90]) translate([0, -r, 0]) hull() {
+		translate([-dist / 2, 0, 0]) cylinder(h=size.x, r=r);
+		translate([dist / 2, 0, 0]) cylinder(h=size.x, r=r);
+
+		translate([0, -(r + cube_size.y / 2), cube_size.z / 2]) cube(cube_size, center=true);
+	}
+}
+
+module power_strip() {
+	module body() {
+		tray([117.0, 38.5, 12.0], r1=8.5, r2=2, r_inner=0.5, thickness=2.25, lip_thickness=1, ridge_height=1);
+
+		for (x=[27:28.5:84]) {
+			translate([x, 19.25, 1]) ground_channel([8, 8, 15.5], thickness=1.5, wing_size=[1.25, 4.5, 12.5]);
+		}
+
+		translate([33.5, 1.25, 1]) power_strip_buttresses();
+		translate([33.5, 38.5 - 1.25, 1]) mirror([0, 1, 0]) power_strip_buttresses();
+
+		translate([1, 19.25, 3]) strain_relief_collar([4.5, 20, 9], r=3, bevel=1);
+	}
+
+	module cutouts() {
+		translate([2.5, 19.25, 7]) strain_relief_collar_cutout([6.25, 14.5, 3], r=3);
+		translate([0.75, 19.25, 4.5]) strain_relief_collar_cutout([2.25, 17, 9], r=1.5);
+	}
+
+	difference() {
+		body();
+		cutouts();
+	}
+}
+
+power_strip();
