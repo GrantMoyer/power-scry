@@ -110,7 +110,39 @@ module strain_relief_collar_cutout(size, r) {
 	}
 }
 
+module tube(h, r1, r2) {
+	difference() {
+		cylinder(h=h, r=r1);
+		cylinder(h=h + 1, r=r2);
+	}
+}
+
+module screw_channel(h1, h2, r1, r2, r3, r4) {
+	module body() {
+		cylinder(h=h1, r=r1);
+	}
+
+	module cutout() {
+		hull() {
+			translate([0,0,2 * h1 - h2]) cylinder(h=1, r=2 * r2 - r3);
+			translate([0,0,h2]) cylinder(h=h1 - h2, r=r3);
+		}
+		translate([0, 0, -0.5]) cylinder(h=h1 + 1, r=r4);
+	}
+
+	difference() {
+		body();
+		cutout();
+	}
+}
+
 module power_strip() {
+	screw_channel_poses = [
+		[9, 8.5],
+		[9, 30],
+		[109.75, 7.75],
+		[109.75, 30.75],
+	];
 	module body() {
 		tray([117.0, 38.5, 12.0], r1=8.5, r2=2, r_inner=0.5, thickness=2.25, lip_thickness=1, ridge_height=1);
 
@@ -122,11 +154,19 @@ module power_strip() {
 		translate([33.5, 38.5 - 1.25, 1]) mirror([0, 1, 0]) power_strip_buttresses();
 
 		translate([1, 19.25, 3]) strain_relief_collar([4.5, 20, 9], r=3, bevel=1);
+
+		for (pos = screw_channel_poses) {
+			translate([pos.x, pos.y, 1])
+				screw_channel(h1=10.75, h2=9.25, r1=4, r2=3.25, r3=2.875, r4=1.75);
+		}
 	}
 
 	module cutouts() {
 		translate([2.5, 19.25, 7]) strain_relief_collar_cutout([6.25, 14.5, 3], r=3);
 		translate([0.75, 19.25, 4.5]) strain_relief_collar_cutout([2.25, 17, 9], r=1.5);
+		for (pos = screw_channel_poses) {
+			translate([pos.x, pos.y, -1]) cylinder(h=9.75, r=2.75);
+		}
 	}
 
 	difference() {
