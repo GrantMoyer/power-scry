@@ -276,6 +276,10 @@ module top_shell() {
 			translate([x, 19.25, 1]) line([16, 1, 4], round=[true, true]);
 			translate([x, 19.25, 1]) capped_cylinder(h=9.5, r=0.625);
 		}
+
+		for (pos=screw_channel_poses) {
+			translate([pos.x, pos.y, 1]) tube(h=12.5, r1=2.75, r2=1.125);
+		}
 	}
 
 	module cutout() {
