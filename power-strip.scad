@@ -154,7 +154,7 @@ screw_channel_poses = [
 	[109.75, 30.75],
 ];
 
-ground_slot_poses = [27:28.5:84];
+ground_slot_poses = [each [27:28.5:84]];
 
 module bottom_shell() {
 	module body() {
@@ -229,6 +229,33 @@ module ground_slot(size) {
 	}
 }
 
+module line(size, round=[false, false]) {
+	module endcap(r, round) {
+		if (round) circle(r=r);
+		else square([2 * r, 2 * r], center=true);
+	}
+
+	r = size.y / 2;
+
+	linear_extrude(size.z)
+	translate([r - size.x / 2.0, 0])
+	hull() {
+		endcap(r, round[0]);
+		translate([size.x - size.y, 0]) endcap(r, round[1]);
+	}
+}
+
+module capped_cylinder(h, r) {
+	assert(h >= r);
+
+	cylinder(h=h - r, r = r);
+	translate([0, 0, h - r])
+	difference() {
+		sphere(r=r);
+		translate([0, 0, -r]) cube([3*r, 3*r, r], center=true);
+	}
+}
+
 module top_shell() {
 	module body() {
 		tray([117.0, 38.5, 11.5], r1=8.5, r2=0.75, thickness=1);
@@ -236,6 +263,14 @@ module top_shell() {
 
 		for (x=ground_slot_poses) {
 			translate([x, 19.25, 1]) ground_slot([7.5, 7.5, 3]);
+		}
+
+		translate([ground_slot_poses[1], 19.25, 1]) line([73, 1, 3], round=[true, true]);
+
+		for (i=[0:1]) {
+			x = (ground_slot_poses[i] + ground_slot_poses[i + 1]) / 2;
+			translate([x, 19.25, 1]) line([16, 1, 4], round=[true, true]);
+			translate([x, 19.25, 1]) capped_cylinder(h=9.5, r=0.625);
 		}
 	}
 
