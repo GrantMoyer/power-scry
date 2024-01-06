@@ -158,6 +158,16 @@ module power_strip() {
 		for (pos = screw_channel_poses) {
 			translate([pos.x, pos.y, 1])
 				screw_channel(h1=10.75, h2=9.25, r1=4, r2=3.25, r3=2.875, r4=1.75);
+			dir = pos.y > 38.5 / 2 ? +1 : -1;
+			if (pos.x < 117.0 / 2) {
+				translate([pos.x, pos.y + dir * 5, 4.875 + 1])
+					cube([1, 3, 9.75], center=true);
+			} else {
+				offset = 4.5 / sqrt(2);
+				translate([pos.x + offset, pos.y + dir * offset, 4.875 + 1])
+					rotate([0, 0, dir * -45])
+					cube([1, 2, 9.75], center=true);
+			}
 		}
 	}
 
