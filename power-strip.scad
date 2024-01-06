@@ -284,6 +284,8 @@ module top_shell() {
 			translate([x, 19.25, 1]) capped_cylinder(h=9.5, r=0.625);
 		}
 
+		translate([1, 19.25, 3]) strain_relief_collar([4.5, 20, 8.5], r=3, bevel=1);
+
 		for (pos=screw_channel_poses) {
 			translate([pos.x, pos.y, 1]) tube(h=12.5, r1=2.75, r2=1.125);
 		}
@@ -296,6 +298,10 @@ module top_shell() {
 	}
 
 	module cutout() {
+		translate([2.5, 19.25, 7]) strain_relief_collar_cutout([6.25, 14.5, 3], r=3);
+		translate([0.75, 19.25, 4.5]) strain_relief_collar_cutout([2.25, 17, 9], r=1.5);
+		translate([1, 19.25, 11.5]) cube([2, 17, 2], center=true);
+
 		for (x=ground_slot_poses) {
 			ground_slot_pos = [x, 19.25, 0];
 			translate(ground_slot_pos - [0, 0, 1]) ground_slot([5.75, 5.75, 6]);
