@@ -2,36 +2,39 @@ $fa = 1;
 $fs = 0.4;
 
 module rounded_block(size, r1, r2) {
+	assert(r1 >= r2);
+
 	translate([r1, r1, r2])
-	minkowski() {
-		cube([size.x - 2 * r1, size.y - 2 * r1, size.z - r2]);
-		difference() {
-			minkowski() {
-				cylinder(h=1, r=r1 - r2);
-				sphere(r=r2);
+	if (r1 ==0 && r2 == 0) {
+		cube([size.x, size.y, size.z]);
+	} else if (r2 == 0) {
+		minkowski() {
+			cube([size.x - 2 * r1, size.y - 2 * r1, size.z / 2]);
+			cylinder(h=size.z / 2, r=r1);
+		}
+	} else {
+		minkowski() {
+			cube([size.x - 2 * r1, size.y - 2 * r1, size.z - r2]);
+			difference() {
+				minkowski() {
+					cylinder(h=1, r=r1 - r2);
+					sphere(r=r2);
+				}
+				translate(-[r1 + 1.0, r1 + 1.0, 0])
+					cube([2 * r1 + 2, 2 * r1 + 2, r2 + 2]);
 			}
-			translate(-[r1 + 1.0, r1 + 1.0, 0])
-				cube([2 * r1 + 2, 2 * r1 + 2, r2 + 2]);
 		}
 	}
 }
 
-module tray(size, r1, r2, r_inner, thickness, lip_thickness, ridge_height) {
+module tray(size, r1, r2, thickness) {
 	difference() {
-		union() {
-			rounded_block(size, r1=r1, r2=r2);
-			translate([lip_thickness, lip_thickness, lip_thickness])
-				rounded_block(
-					size - [2 * lip_thickness, 2 * lip_thickness, lip_thickness - ridge_height],
-					r1=r1 - lip_thickness,
-					r2=r2 - lip_thickness
-				);
-		}
+		rounded_block(size, r1=r1, r2=r2);
 		translate([thickness, thickness, thickness])
 			rounded_block(
-				size - [2 * thickness, 2 * thickness, -ridge_height],
-				r1=r1 - thickness,
-				r2=r_inner
+				size - [2 * thickness, 2 * thickness, 0],
+				r1=max(0, r1 - thickness),
+				r2=max(0, r2 - thickness)
 			);
 	}
 }
@@ -144,7 +147,7 @@ module conductor_support(h1, h2, h3, w1, w2, w3, thickness) {
 	cube([w3, thickness, h3]);
 }
 
-module power_strip() {
+module bottom_shell() {
 	screw_channel_poses = [
 		[9, 8.5],
 		[9, 30],
@@ -152,7 +155,8 @@ module power_strip() {
 		[109.75, 30.75],
 	];
 	module body() {
-		tray([117.0, 38.5, 12.0], r1=8.5, r2=2, r_inner=0.5, thickness=2.25, lip_thickness=1, ridge_height=1);
+		tray([117.0, 38.5, 12.0], r1=8.5, r2=2, thickness=2);
+		translate([1.25, 1.25, 1.25]) tray([114.5, 36.0, 11.75], r1=7.25, r2=1.75, thickness=1);
 
 		for (x=[27:28.5:84]) {
 			translate([x, 19.25, 1]) ground_channel([8, 8, 15.5], thickness=1.5, wing_size=[1.25, 4.5, 12.5]);
@@ -205,4 +209,4 @@ module power_strip() {
 	}
 }
 
-power_strip();
+bottom_shell();
