@@ -308,10 +308,10 @@ module top_shell() {
 			translate(ground_slot_pos + [0, 0, 1]) ground_slot([7.75, 7.75, 3]);
 
 			live_slot_pos = ground_slot_pos + [12.5, 6.5, 0];
-			translate(live_slot_pos + [0, 0, 3]) cube([9, 4.25, 4], center=true);
+			translate(live_slot_pos + [0, 0, 3]) cube([9, 4.25, 4.25], center=true);
 
 			neutral_slot_pos = ground_slot_pos + [12.5, -6.5, 0];
-			translate(neutral_slot_pos + [0, 0, 3]) cube([11, 4.25, 4], center=true);
+			translate(neutral_slot_pos + [0, 0, 3]) cube([11, 4.25, 4.25], center=true);
 
 			translate(live_slot_pos + [0, 0, 1])
 				linear_extrude(9.25)
@@ -326,7 +326,7 @@ module top_shell() {
 
 			for (y_dir=[-1, 1]) for (x_dir=[-1, 1]) {
 				translate(ground_slot_pos + [12.5 + x_dir * 10, y_dir * 6.5, 1])
-					linear_extrude(4)
+					linear_extrude(4.25)
 					rotate([0, 0, 90])
 					line([3, 1]);
 			}
@@ -353,12 +353,12 @@ module top_shell() {
 
 		for (i=[0:1]) {
 			x = (ground_slot_poses[i] + ground_slot_poses[i + 1]) / 2;
-			translate([x, 19.25, 1]) linear_extrude(5) line([16, 1], round=[true, true]);
+			translate([x, 19.25, 1]) linear_extrude(4.25) line([16, 1], round=[true, true]);
 			translate([x, 19.25, 1]) capped_cylinder(h=9.5, r=0.625);
 		}
 
 		translate([92.25, 19.25, 1])
-			linear_extrude(5)
+			linear_extrude(4.25)
 			line([3, 1], round=[true, true]);
 
 		translate([1, 19.25, 3]) strain_relief_collar([4.5, 20, 8.5], r=3, bevel=1);
