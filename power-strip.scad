@@ -79,9 +79,13 @@ module buttress(size, inset) {
 	);
 }
 
-module power_strip_buttresses() {
-	for (x=[0:22.5:67.5]) {
-		translate([x, 0, 0]) buttress([1, 3, 10.75], 1.5);
+module power_strip_buttresses(size, inset, interval, count, h_overlap) {
+	for (x=[0:interval:interval * (count - 1)]) {
+		translate([x, 0, 0]) buttress(size, inset=inset);
+		if (h_overlap != undef) {
+			translate([x, 0, h_overlap / 2])
+				cube([size.x, (size.y - inset) * 2, h_overlap], center=true);
+		}
 	}
 }
 
@@ -165,8 +169,11 @@ module bottom_shell() {
 			translate([x, 19.25, 1]) ground_channel([8, 8, 15.5], thickness=1.5, wing_size=[1.25, 4.5, 12.5]);
 		}
 
-		translate([33.5, 1.25, 1]) power_strip_buttresses();
-		translate([33.5, 38.5 - 1.25, 1]) mirror([0, 1, 0]) power_strip_buttresses();
+		module buttresses() {
+			power_strip_buttresses([1, 3, 10.75], inset=1.5, interval=22.5, count=4);
+		}
+		translate([33.5, 1.25, 1]) buttresses();
+		translate([33.5, 38.5 - 1.25, 1]) mirror([0, 1, 0]) buttresses();
 
 		translate([1, 19.25, 3]) strain_relief_collar([4.5, 20, 9], r=3, bevel=1);
 
@@ -280,6 +287,12 @@ module top_shell() {
 		for (pos=screw_channel_poses) {
 			translate([pos.x, pos.y, 1]) tube(h=12.5, r1=2.75, r2=1.125);
 		}
+
+		module buttresses() {
+			power_strip_buttresses([1, 3, 11], inset=1.5, interval=22, count=5, h_overlap=9.5);
+		}
+		translate([14, 2, 1]) buttresses();
+		translate([14, 38.5 - 2, 1]) mirror([0, 1, 0]) buttresses();
 	}
 
 	module cutout() {
