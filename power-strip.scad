@@ -136,6 +136,14 @@ module screw_channel(h1, h2, r1, r2, r3, r4) {
 	}
 }
 
+module conductor_support(h1, h2, h3, w1, w2, w3, thickness) {
+	hull() {
+		cube([thickness, w1, h1]);
+		cube([thickness, w2, h2]);
+	}
+	cube([w3, thickness, h3]);
+}
+
 module power_strip() {
 	screw_channel_poses = [
 		[9, 8.5],
@@ -168,6 +176,18 @@ module power_strip() {
 					rotate([0, 0, dir * -45])
 					cube([1, 2, 9.75], center=true);
 			}
+		}
+
+		module support() {
+			conductor_support(h1=12.5, h2=9.5, h3=8.75, w1=2.5, w2=4, w3=4.5, thickness=1.25);
+		}
+		for (y = [11, 27.5]) {
+			translate([100.5, y, 1])
+			if (y < 38.5 / 2)
+				support();
+			else
+				mirror([0, 1 ,0])
+				support();
 		}
 	}
 
