@@ -147,18 +147,21 @@ module conductor_support(h1, h2, h3, w1, w2, w3, thickness) {
 	cube([w3, thickness, h3]);
 }
 
+screw_channel_poses = [
+	[9, 8.5],
+	[9, 30],
+	[109.75, 7.75],
+	[109.75, 30.75],
+];
+
+ground_slot_poses = [27:28.5:84];
+
 module bottom_shell() {
-	screw_channel_poses = [
-		[9, 8.5],
-		[9, 30],
-		[109.75, 7.75],
-		[109.75, 30.75],
-	];
 	module body() {
 		tray([117.0, 38.5, 12.0], r1=8.5, r2=2, thickness=2);
 		translate([1.25, 1.25, 1.25]) tray([114.5, 36.0, 11.75], r1=7.25, r2=1.75, thickness=1);
 
-		for (x=[27:28.5:84]) {
+		for (x=ground_slot_poses) {
 			translate([x, 19.25, 1]) ground_channel([8, 8, 15.5], thickness=1.5, wing_size=[1.25, 4.5, 12.5]);
 		}
 
@@ -209,13 +212,41 @@ module bottom_shell() {
 	}
 }
 
+module ground_slot(size) {
+	r = size.y / 2;
+	assert(r <= size.x);
+
+	cube_width = size.x - r;
+
+	translate([size.x / 2 - r, 0, 0]) {
+		difference() {
+			cylinder(h=size.z, r=r);
+			translate([-r - cube_width / 2, 0, size.z / 2])
+				cube([2 * r, size.y, 2 * size.z], center=true);
+		}
+		translate([-cube_width / 2, 0, size.z / 2])
+			cube([cube_width, size.y, size.z], center=true);
+	}
+}
+
 module top_shell() {
 	module body() {
 		tray([117.0, 38.5, 11.5], r1=8.5, r2=0.75, thickness=1);
 		translate([0.5, 0.5, 0.5]) tray([116.0, 37.5, 10.0], r1=8, r2=2, thickness=1.5);
+
+		for (x=ground_slot_poses) {
+			translate([x, 19.25, 1]) ground_slot([7.5, 7.5, 3]);
+		}
 	}
 
 	module cutout() {
+		for (x=ground_slot_poses) {
+			translate([x, 19.25, -1]) ground_slot([5.75, 5.75, 6]);
+			hull() {
+				translate([x, 19.25, -2]) ground_slot([9, 9, 1]);
+				translate([x, 19.25, 0]) ground_slot([5, 5, 1]);
+			}
+		}
 	}
 
 	difference() {
