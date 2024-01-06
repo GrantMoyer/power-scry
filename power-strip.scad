@@ -262,7 +262,11 @@ module top_shell() {
 		translate([0.5, 0.5, 0.5]) tray([116.0, 37.5, 10.0], r1=8, r2=2, thickness=1.5);
 
 		for (x=ground_slot_poses) {
-			translate([x, 19.25, 1]) ground_slot([7.5, 7.5, 3]);
+			ground_slot_pos = [x, 19.25, 0];
+			translate(ground_slot_pos + [0, 0, 1]) ground_slot([7.75, 7.75, 3]);
+
+			translate(ground_slot_pos + [12.5, 6.5, 3]) cube([9, 4.25, 4], center=true);
+			translate(ground_slot_pos + [12.5, -6.5, 3]) cube([11, 4.25, 4], center=true);
 		}
 
 		translate([ground_slot_poses[1], 19.25, 1]) line([73, 1, 3], round=[true, true]);
@@ -276,10 +280,25 @@ module top_shell() {
 
 	module cutout() {
 		for (x=ground_slot_poses) {
-			translate([x, 19.25, -1]) ground_slot([5.75, 5.75, 6]);
+			ground_slot_pos = [x, 19.25, 0];
+			translate(ground_slot_pos - [0, 0, 1]) ground_slot([5.75, 5.75, 6]);
 			hull() {
-				translate([x, 19.25, -2]) ground_slot([9, 9, 1]);
-				translate([x, 19.25, 0]) ground_slot([5, 5, 1]);
+				translate(ground_slot_pos - [0, 0, 2]) ground_slot([9, 9, 1]);
+				translate(ground_slot_pos) ground_slot([5, 5, 1]);
+			}
+
+			live_slot_pos = ground_slot_pos + [12.5, 6.5, 0];
+			translate(live_slot_pos + [0, 0, 2.5]) cube([7, 2.25, 6], center=true);
+			hull() {
+				translate(live_slot_pos - [0, 0, 1.5]) cube([10.25, 5.5, 1], center=true);
+				translate(live_slot_pos + [0, 0, 0.5]) cube([6.25, 1.5, 1], center=true);
+			}
+
+			neutral_slot_pos = ground_slot_pos + [12.5, -6.5, 0];
+			translate(neutral_slot_pos + [0, 0, 2.5]) cube([9, 2.25, 6], center=true);
+			hull() {
+				translate(neutral_slot_pos - [0, 0, 1.5]) cube([12.25, 5.5, 1], center=true);
+				translate(neutral_slot_pos + [0, 0, 0.5]) cube([8.25, 1.5, 1], center=true);
 			}
 		}
 	}
