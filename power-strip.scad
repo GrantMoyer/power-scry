@@ -244,7 +244,6 @@ module line(size, round=[false, false]) {
 
 	r = size.y / 2;
 
-	linear_extrude(size.z)
 	translate([r - size.x / 2.0, 0])
 	hull() {
 		endcap(r, round[0]);
@@ -263,6 +262,42 @@ module capped_cylinder(h, r) {
 	}
 }
 
+module path(points, thickness) {
+	module point() {
+		circle(r=thickness / 2);
+	}
+
+	for (i=[0:len(points) - 2]) {
+		hull() {
+			translate(points[i]) point();
+			translate(points[i + 1]) point();
+		}
+	}
+}
+
+module conductor_channel_bump() {
+	left_points = [
+		[0, 0],
+		[3, 0],
+		[4.5, 1],
+	];
+	points = [
+		each left_points,
+		for (i=[len(left_points) - 1:-1:0]) [19.75 - left_points[i].x, left_points[i].y],
+	];
+
+	translate([-19.75 / 2, 0]) path(points, thickness=1.25);
+}
+
+module conductor_channel(left_extension=6.5, right_extension=6.5) {
+	translate([0, 1.5]) conductor_channel_bump();
+	translate([0, -1.5]) mirror([0, 1, 0]) conductor_channel_bump();
+	translate([-(19.75 + left_extension) / 2, 1.5])
+		line([left_extension + 1.25, 1.25], round=[true, true]);
+	translate([(19.75 + right_extension) / 2, 1.5])
+		line([right_extension + 1.25, 1.25], round=[true, true]);
+}
+
 module top_shell() {
 	module body() {
 		tray([117.0, 38.5, 11.5], r1=8.5, r2=0.75, thickness=1);
@@ -272,17 +307,59 @@ module top_shell() {
 			ground_slot_pos = [x, 19.25, 0];
 			translate(ground_slot_pos + [0, 0, 1]) ground_slot([7.75, 7.75, 3]);
 
-			translate(ground_slot_pos + [12.5, 6.5, 3]) cube([9, 4.25, 4], center=true);
-			translate(ground_slot_pos + [12.5, -6.5, 3]) cube([11, 4.25, 4], center=true);
+			live_slot_pos = ground_slot_pos + [12.5, 6.5, 0];
+			translate(live_slot_pos + [0, 0, 3]) cube([9, 4.25, 4], center=true);
+
+			neutral_slot_pos = ground_slot_pos + [12.5, -6.5, 0];
+			translate(neutral_slot_pos + [0, 0, 3]) cube([11, 4.25, 4], center=true);
+
+			translate(live_slot_pos + [0, 0, 1])
+				linear_extrude(9.25)
+				mirror([0, 1, 0])
+				if (x == ground_slot_poses[2]) conductor_channel(right_extension=1.5);
+				else conductor_channel();
+
+			translate(neutral_slot_pos + [0, 0, 1])
+				linear_extrude(9.25)
+				if (x == ground_slot_poses[2]) conductor_channel(right_extension=1.5);
+				else conductor_channel();
+
+			for (y_dir=[-1, 1]) for (x_dir=[-1, 1]) {
+				translate(ground_slot_pos + [12.5 + x_dir * 10, y_dir * 6.5, 1])
+					linear_extrude(4)
+					rotate([0, 0, 90])
+					line([3, 1]);
+			}
 		}
 
-		translate([ground_slot_poses[1], 19.25, 1]) line([73, 1, 3], round=[true, true]);
+		translate([0, 0, 1])
+		linear_extrude(9.25)
+		for (dir=[-1, 1]) {
+			path([
+				[15, 19.25 + dir * 3.5],
+				[21.5, 19.25 + dir * 3.5],
+				[ground_slot_poses[0] + 12.5 - 19.75 / 2 - 6.5, 19.25 + dir * (6.5 - 1.5)],
+			], thickness=1.25);
+		}
+
+		translate([93.5, 19.25, 1])
+			linear_extrude(9.25)
+			rotate([0, 0, 90])
+			line([8.5, 1.25]);
+
+		translate([ground_slot_poses[1], 19.25, 1])
+			linear_extrude(3)
+			line([73, 1], round=[true, true]);
 
 		for (i=[0:1]) {
 			x = (ground_slot_poses[i] + ground_slot_poses[i + 1]) / 2;
-			translate([x, 19.25, 1]) line([16, 1, 4], round=[true, true]);
+			translate([x, 19.25, 1]) linear_extrude(5) line([16, 1], round=[true, true]);
 			translate([x, 19.25, 1]) capped_cylinder(h=9.5, r=0.625);
 		}
+
+		translate([92.25, 19.25, 1])
+			linear_extrude(5)
+			line([3, 1], round=[true, true]);
 
 		translate([1, 19.25, 3]) strain_relief_collar([4.5, 20, 8.5], r=3, bevel=1);
 
