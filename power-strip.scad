@@ -162,8 +162,8 @@ ground_slot_poses = [each [27:28.5:84]];
 
 module bottom_shell() {
 	module body() {
-		tray([117.0, 38.5, 12.0], r1=8.5, r2=2, thickness=2);
-		translate([1.25, 1.25, 1.25]) tray([114.5, 36.0, 11.75], r1=7.25, r2=1.75, thickness=1);
+		tray([117.0, 38.5, 12.0], r1=8.5, r2=2, thickness=1.5);
+		translate([1.05, 1.05, 1.05]) tray([114.9, 36.4, 11.95], r1=7.45, r2=1.75, thickness=1);
 
 		for (x=ground_slot_poses) {
 			translate([x, 19.25, 1]) ground_channel([8, 8, 15.5], thickness=1.5, wing_size=[1.25, 4.5, 12.5]);
@@ -179,7 +179,7 @@ module bottom_shell() {
 
 		for (pos = screw_channel_poses) {
 			translate([pos.x, pos.y, 1])
-				screw_channel(h1=10.75, h2=9.25, r1=4, r2=3.25, r3=2.875, r4=1.75);
+				screw_channel(h1=10.75, h2=9, r1=4, r2=3.25, r3=2.875, r4=1.75);
 			dir = pos.y > 38.5 / 2 ? +1 : -1;
 			if (pos.x < 117.0 / 2) {
 				translate([pos.x, pos.y + dir * 5, 4.875 + 1])
@@ -314,13 +314,13 @@ module top_shell() {
 			translate(neutral_slot_pos + [0, 0, 3]) cube([11, 4.25, 4.25], center=true);
 
 			translate(live_slot_pos + [0, 0, 1])
-				linear_extrude(9.25)
+				linear_extrude(9)
 				mirror([0, 1, 0])
 				if (x == ground_slot_poses[2]) conductor_channel(right_extension=1.5);
 				else conductor_channel();
 
 			translate(neutral_slot_pos + [0, 0, 1])
-				linear_extrude(9.25)
+				linear_extrude(9)
 				if (x == ground_slot_poses[2]) conductor_channel(right_extension=1.5);
 				else conductor_channel();
 
@@ -333,7 +333,7 @@ module top_shell() {
 		}
 
 		translate([0, 0, 1])
-		linear_extrude(9.25)
+		linear_extrude(9)
 		for (dir=[-1, 1]) {
 			path([
 				[15, 19.25 + dir * 3.5],
@@ -343,7 +343,7 @@ module top_shell() {
 		}
 
 		translate([93.5, 19.25, 1])
-			linear_extrude(9.25)
+			linear_extrude(9)
 			rotate([0, 0, 90])
 			line([8.5, 1.25]);
 
@@ -409,4 +409,5 @@ module top_shell() {
 	}
 }
 
-top_shell();
+bottom_shell();
+translate([0, 38.5, 11.5 + 12]) rotate([180, 0, 0]) top_shell();
