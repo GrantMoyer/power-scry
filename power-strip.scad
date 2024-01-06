@@ -195,7 +195,7 @@ module bottom_shell() {
 		}
 	}
 
-	module cutouts() {
+	module cutout() {
 		translate([2.5, 19.25, 7]) strain_relief_collar_cutout([6.25, 14.5, 3], r=3);
 		translate([0.75, 19.25, 4.5]) strain_relief_collar_cutout([2.25, 17, 9], r=1.5);
 		for (pos = screw_channel_poses) {
@@ -205,8 +205,23 @@ module bottom_shell() {
 
 	difference() {
 		body();
-		cutouts();
+		cutout();
 	}
 }
 
-bottom_shell();
+module top_shell() {
+	module body() {
+		tray([117.0, 38.5, 11.5], r1=8.5, r2=0.75, thickness=1);
+		translate([0.5, 0.5, 0.5]) tray([116.0, 37.5, 10.0], r1=8, r2=2, thickness=1.5);
+	}
+
+	module cutout() {
+	}
+
+	difference() {
+		body();
+		cutout();
+	}
+}
+
+top_shell();
