@@ -146,6 +146,31 @@ module lip(filled=false) {
 	}
 }
 
+module sensor_holder() {
+	mean_sensor_radius = (get_sensor_bounds().y - get_sensor_thickness()) / 2;
+
+	for (ang=[0:90:359])
+	rotate([0, 0, 45 + ang])
+	translate([mean_sensor_radius, 0])
+	{
+		linear_extrude(sensor_gap - fudge + box_thickness / 2)
+			line([get_sensor_thickness() + 2 * support_thickness, support_thickness]);
+
+		inner_radius = mean_sensor_radius - get_sensor_thickness() / 2;
+		translate([-inner_radius, 0])
+			linear_extrude(2 * sensor_gap + box_thickness / 2)
+			line([inner_radius - support_thickness, support_thickness]);
+
+		for (ang=[0:180:359])
+			rotate([0, 0, 90 + ang])
+			translate([0, -3 * support_thickness - get_sensor_thickness() / 2])
+			buttress(
+				[support_thickness, 3 * support_thickness, 2 * sensor_gap + box_thickness / 2],
+				inset=support_thickness
+			);
+	}
+}
+
 module bottom_shell() {
 	module body() {
 		difference() {
@@ -180,28 +205,7 @@ module bottom_shell() {
 			linear_extrude(support_height + box_thickness / 2)
 			line([wing_length + support_thickness, support_thickness], round=[true, true]);
 
-		mean_sensor_radius = (get_sensor_bounds().y - get_sensor_thickness()) / 2;
-		translate([sensor_pos.x, sensor_pos.y, box_thickness / 2])
-			for (ang=[0:90:359])
-			rotate([0, 0, 45 + ang])
-			translate([mean_sensor_radius, 0])
-			{
-				linear_extrude(sensor_gap - fudge + box_thickness / 2)
-					line([get_sensor_thickness() + 2 * support_thickness, support_thickness]);
-
-				inner_radius = mean_sensor_radius - get_sensor_thickness() / 2;
-				translate([-inner_radius, 0])
-					linear_extrude(2 * sensor_gap + box_thickness / 2)
-					line([inner_radius - support_thickness, support_thickness]);
-
-				for (ang=[0:180:359])
-					rotate([0, 0, 90 + ang])
-					translate([0, -3 * support_thickness - get_sensor_thickness() / 2])
-					buttress(
-						[support_thickness, 3 * support_thickness, 2 * sensor_gap + box_thickness / 2],
-						inset=support_thickness
-					);
-			}
+		translate([sensor_pos.x, sensor_pos.y, box_thickness / 2]) sensor_holder();
 
 		difference() {
 			translate(collar_pos) difference() {
