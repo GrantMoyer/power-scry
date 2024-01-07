@@ -171,6 +171,27 @@ module sensor_holder() {
 	}
 }
 
+module shell_buttresses() {
+	buttress_count = 4;
+	butresss_inset = 2 * box_radius;
+	for (ang=[0:90:359])
+		rotate([0, 0, ang])
+		for (i=[0:buttress_count - 1])
+	{
+		butress_span = box_width - 2 * butresss_inset;
+		butress_interval = butress_span / (buttress_count - 1);
+		x = butresss_inset - box_width / 2 + butress_interval * i;
+		y = -box_width / 2 + 3 * box_thickness / 4;
+
+		translate([x, y, 0])
+			buttress([
+				support_thickness,
+				2 * support_thickness + box_thickness / 4,
+				(box_height - box_thickness) / 2
+			], inset=support_thickness);
+	}
+}
+
 module bottom_shell() {
 	module body() {
 		difference() {
@@ -217,25 +238,8 @@ module bottom_shell() {
 			lip();
 		}
 
-		buttress_count = 4;
-		butresss_inset = 2 * box_radius;
 		difference() {
-			for (ang=[0:90:359])
-				rotate([0, 0, ang])
-				for (i=[0:buttress_count - 1])
-			{
-				butress_span = box_width - 2 * butresss_inset;
-				butress_interval = butress_span / (buttress_count - 1);
-				x = butresss_inset - box_width / 2 + butress_interval * i;
-				y = -box_width / 2 + 3 * box_thickness / 4;
-
-				translate([x, y, box_thickness / 2])
-					buttress([
-						support_thickness,
-						2 * support_thickness + box_thickness / 4,
-						(box_height - box_thickness) / 2
-					], inset=support_thickness);
-			}
+			translate([0, 0, box_thickness / 2]) shell_buttresses();
 			lip();
 		}
 
@@ -295,22 +299,31 @@ module top_shell() {
 	lip();
 
 	difference() {
-		translate([0, 0, box_height - box_thickness - support_thickness])
-			linear_extrude(box_thickness / 2 + support_thickness)
-			difference()
-		{
-			rounded_square(
-				[box_width - box_thickness, box_width - box_thickness],
-				r=box_radius - box_thickness / 2,
-				center=true
-			);
-			translate([0, 2 * meter_pos.y + box_width - box_thickness])
-				square([box_width, box_width], center=true);
-			translate(meter_pos)
-				square([get_meter_body().x, get_meter_body().y] + [fudge, fudge], center=true);
-			translate([meter_pos.x, meter_pos.y])
-				square([get_meter_bounds().x - 2 * get_tab_thickness() + fudge, get_tab_width() + fudge], center=true);
+		union() {
+			translate([0, 0, box_height - box_thickness - support_thickness])
+				linear_extrude(box_thickness / 2 + support_thickness)
+				difference()
+			{
+				rounded_square(
+					[box_width - box_thickness, box_width - box_thickness],
+					r=box_radius - box_thickness / 2,
+					center=true
+				);
+				translate([0, 2 * meter_pos.y + box_width - box_thickness])
+					square([box_width, box_width], center=true);
+				translate(meter_pos)
+					square([get_meter_body().x, get_meter_body().y] + [fudge, fudge], center=true);
+				translate([meter_pos.x, meter_pos.y])
+					square([
+						get_meter_bounds().x - 2 * get_tab_thickness() + fudge,
+						get_tab_width() + fudge
+					], center=true);
+			}
+			translate([0, 0, box_height - box_thickness / 2])
+				mirror([0, 0, 1])
+				shell_buttresses();
 		}
+
 		translate([meter_pos.x, meter_pos.y, box_height - box_thickness])
 			linear_extrude(box_thickness)
 			square([get_meter_bounds().x, get_meter_bounds().y], center=true);
