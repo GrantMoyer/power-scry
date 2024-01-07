@@ -183,6 +183,25 @@ module bottom_shell() {
 				translate([0, sum(collar_widths) / 2])
 				square([collar_size.x + 1, sum(collar_widths) + 1], center=true);
 		}
+
+		buttress_count = 4;
+		butresss_inset = 16;
+		for (ang=[0:90:359])
+			rotate([0, 0, ang])
+			for (i=[0:buttress_count - 1])
+		{
+			butress_span = box_width - 2 * butresss_inset;
+			butress_interval = butress_span / (buttress_count - 1);
+			x = butresss_inset - box_width / 2 + butress_interval * i;
+			y = -box_width / 2 + box_thickness;
+
+			translate([x, y, box_thickness / 2])
+				buttress([
+					support_thickness,
+					2 * support_thickness,
+					(box_height - box_thickness) / 2
+				], inset=support_thickness);
+		}
 	}
 
 	module cutout() {
