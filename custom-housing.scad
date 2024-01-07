@@ -46,14 +46,42 @@ neutral_height = 0.340 * mm_per_in;
 
 function sum(vec) = vec * [for (_=vec) 1];
 
-module outlet(offset = 0) {
+module outlet() {
 	translate([0, ground_dist - center_dist])
-		ground_slot(ground_width + 2 * offset);
+		ground_slot(ground_width);
 	translate([blade_dist / 2, -center_dist])
-		square([blade_width + 2 * offset, neutral_height + 2 * offset], center=true);
+		square([blade_width, neutral_height], center=true);
 	translate([-blade_dist / 2, -center_dist])
-		square([blade_width + 2 * offset, live_height + 2 * offset], center=true);
+		square([blade_width, live_height], center=true);
+}
 
+module outlet_cone(h) {
+	hull() {
+		translate([0, ground_dist - center_dist, 0])
+			linear_extrude(h / 2)
+			ground_slot(ground_width);
+		translate([0, ground_dist - center_dist, h])
+			linear_extrude(h / 2)
+			ground_slot(ground_width + 2 * h);
+	}
+
+	hull() {
+		translate([blade_dist / 2, -center_dist, 0])
+			linear_extrude(h / 2)
+			square([blade_width, neutral_height], center=true);
+		translate([blade_dist / 2, -center_dist, h])
+			linear_extrude(h / 2)
+			square([blade_width + 2 * h, neutral_height + 2 * h], center=true);
+	}
+
+	hull() {
+		translate([-blade_dist / 2, -center_dist, 0])
+			linear_extrude(h / 2)
+			square([blade_width, live_height], center=true);
+		translate([-blade_dist / 2, -center_dist, h])
+			linear_extrude(h / 2)
+			square([blade_width + 2 * h, live_height + 2 * h], center=true);
+	}
 }
 
 module circle_text(text, r, ang, adjustments, size, font) {
@@ -294,6 +322,10 @@ module top_shell() {
 			linear_extrude(box_thickness + 1)
 			rotate([0, 0, 180])
 			outlet();
+
+		translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness / 2])
+			rotate([0, 0, 180])
+			outlet_cone(box_thickness);
 	}
 
 	lip();
