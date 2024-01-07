@@ -290,6 +290,26 @@ module top_shell() {
 
 	lip();
 
+	difference() {
+		translate([0, 0, box_height - box_thickness - support_thickness])
+			linear_extrude(box_thickness / 2 + support_thickness)
+			difference()
+		{
+			rounded_square(
+				[box_width - box_thickness, box_width - box_thickness],
+				r=box_radius - box_thickness / 2,
+				center=true
+			);
+			translate([0, 2 * meter_pos.y + box_width - box_thickness])
+				square([box_width, box_width], center=true);
+			translate(meter_pos)
+				square([get_meter_body().x, get_meter_body().y] + [fudge, fudge], center=true);
+		}
+		translate([meter_pos.x, meter_pos.y, box_height - box_thickness])
+			linear_extrude(box_thickness)
+			square([get_meter_bounds().x, get_meter_bounds().y], center=true);
+	}
+
 	translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness])
 		linear_extrude(box_thickness)
 		title(title_font_size);
