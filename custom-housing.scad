@@ -10,6 +10,8 @@ box_height = get_meter_bounds().z + 2 * box_thickness - get_bezel().z;
 box_radius = 8;
 box_edge_radius = 2;
 
+fudge = 0.5;
+
 collar_inner_size = [13.5, 9.5];
 collar_outer_size = [16, 13];
 collar_inner_radius = 1.5;
@@ -112,15 +114,15 @@ module strain_relief_collar() {
 }
 
 module strain_relief_collar_cutout() {
-	fudge = [0.5, 0.5];
+	collar_fudge = [fudge, fudge];
 
 	rotate([-90, 0, 0]) {
 		translate([0, 0, -0.5])
 			linear_extrude(sum(collar_widths) + 1)
-			rounded_square(collar_inner_size + fudge, r=collar_inner_radius, center=true);
+			rounded_square(collar_inner_size + collar_fudge, r=collar_inner_radius, center=true);
 		translate([0, 0, collar_widths[0]])
 			linear_extrude(collar_widths[1])
-			rounded_square(collar_outer_size + fudge, r=collar_outer_radius, center=true);
+			rounded_square(collar_outer_size + collar_fudge, r=collar_outer_radius, center=true);
 	}
 }
 
@@ -178,14 +180,13 @@ module bottom_shell() {
 			linear_extrude(support_height + box_thickness / 2)
 			line([wing_length + support_thickness, support_thickness], round=[true, true]);
 
-		gap_fudge = 0.5;
 		mean_sensor_radius = (get_sensor_bounds().y - get_sensor_thickness()) / 2;
 		translate([sensor_pos.x, sensor_pos.y, box_thickness / 2])
 			for (ang=[0:90:359])
 			rotate([0, 0, 45 + ang])
 			translate([mean_sensor_radius, 0])
 			{
-				linear_extrude(sensor_gap - gap_fudge + box_thickness / 2)
+				linear_extrude(sensor_gap - fudge + box_thickness / 2)
 					line([get_sensor_thickness() + 2 * support_thickness, support_thickness]);
 
 				inner_radius = mean_sensor_radius - get_sensor_thickness() / 2;
@@ -232,6 +233,15 @@ module bottom_shell() {
 					], inset=support_thickness);
 			}
 			lip();
+		}
+
+		meter_slot_size = [get_meter_body().x + fudge, get_meter_body().y + fudge];
+		translate([meter_pos.x, meter_pos.y, box_thickness])
+			linear_extrude(support_thickness)
+			difference()
+		{
+			square(meter_slot_size + 2 * [support_thickness, support_thickness], center=true);
+			square(meter_slot_size, center=true);
 		}
 	}
 
