@@ -5,12 +5,14 @@ meter_bounds_size = [89.6, 49.6, 24.4];
 bezel_size = [meter_bounds_size.x, meter_bounds_size.y, 2];
 meter_body_size = [84.6, 44.6, meter_bounds_size.z - bezel_size.z];
 sensor_bounds_size = [32, 30, 15];
+sensor_thickness = 6;
 screen_size = [51, 30];
 
 function get_meter_bounds() = meter_bounds_size;
 function get_bezel() = bezel_size;
 function get_meter_body() = meter_body_size;
 function get_sensor_bounds() = sensor_bounds_size;
+function get_sensor_thickness() = sensor_thickness;
 function get_screen() = screen_size;
 
 module bezel() {
@@ -96,7 +98,7 @@ module sensor() {
 				translate([r, 0, h / 2]) cube([2 * bulge_width, 10, 11], center=true);
 			}
 		}
-		translate([0, 0, -1]) cylinder(r=9, h=h + 2);
+		translate([0, 0, -1]) cylinder(r=r - sensor_thickness, h=h + 2);
 	}
 }
 

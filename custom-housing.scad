@@ -10,6 +10,7 @@ box_height = get_meter_bounds().z + 2 * box_thickness - get_bezel().z;
 
 meter_pos = [0, (get_meter_bounds().y - get_meter_bounds().x) / 2];
 sensor_pos = [-box_width / 4, box_width / 4];
+sensor_gap = (box_height - 2 * box_thickness - get_sensor_bounds().z) / 2;
 outlet_pos = [box_width / 4, box_width / 4];
 
 mm_per_in = 25.4;
@@ -64,8 +65,32 @@ module bottom_shell() {
 			ground_slot_pos.y,
 			box_thickness / 2
 		])
-			linear_extrude(support_height + box_thickness / 2)
-			line([wing_length + support_thickness, support_thickness], round=[true, true]);
+		linear_extrude(support_height + box_thickness / 2)
+		line([wing_length + support_thickness, support_thickness], round=[true, true]);
+
+	gap_fudge = 0.5;
+	mean_sensor_radius = (get_sensor_bounds().y - get_sensor_thickness()) / 2;
+	translate([sensor_pos.x, sensor_pos.y, box_thickness / 2])
+		for (ang=[0:90:359])
+		rotate([0, 0, 45 + ang])
+		translate([mean_sensor_radius, 0])
+		{
+			linear_extrude(sensor_gap - gap_fudge + box_thickness / 2)
+				line([get_sensor_thickness() + 2 * support_thickness, support_thickness]);
+
+			inner_radius = mean_sensor_radius - get_sensor_thickness() / 2;
+			translate([-inner_radius, 0])
+				linear_extrude(2 * sensor_gap + box_thickness / 2)
+				line([inner_radius - support_thickness, support_thickness]);
+
+			for (ang=[0:180:359])
+				rotate([0, 0, 90 + ang])
+				translate([0, -3 * support_thickness - get_sensor_thickness() / 2])
+				buttress(
+					[support_thickness, 3 * support_thickness, 2 * sensor_gap + box_thickness / 2],
+					inset=support_thickness
+				);
+		}
 }
 
 module top_shell() {
@@ -98,6 +123,6 @@ module top_shell() {
 }
 
 translate([meter_pos.x, meter_pos.y, box_thickness]) meter();
-translate([sensor_pos.x, sensor_pos.y, box_thickness]) sensor();
+translate([sensor_pos.x, sensor_pos.y, box_thickness + sensor_gap]) sensor();
 bottom_shell();
 *top_shell();
