@@ -304,10 +304,19 @@ module top_shell() {
 				square([box_width, box_width], center=true);
 			translate(meter_pos)
 				square([get_meter_body().x, get_meter_body().y] + [fudge, fudge], center=true);
+			translate([meter_pos.x, meter_pos.y])
+				square([get_meter_bounds().x - 2 * get_tab_thickness() + fudge, get_tab_width() + fudge], center=true);
 		}
 		translate([meter_pos.x, meter_pos.y, box_height - box_thickness])
 			linear_extrude(box_thickness)
 			square([get_meter_bounds().x, get_meter_bounds().y], center=true);
+		translate([
+			meter_pos.x,
+			meter_pos.y,
+			box_height - box_thickness - support_thickness - get_tab_clearance(),
+		])
+			linear_extrude(support_thickness)
+			square([get_meter_bounds().x, get_tab_width() + fudge], center=true);
 	}
 
 	translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness])

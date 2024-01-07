@@ -6,6 +6,9 @@ bezel_size = [meter_bounds_size.x, meter_bounds_size.y, 2];
 meter_body_size = [84.6, 44.6, meter_bounds_size.z - bezel_size.z];
 sensor_bounds_size = [32, 30, 15];
 sensor_thickness = 6;
+tab_width = 9.4;
+tab_thickness = 1;
+tab_clearance = 0.8;
 screen_size = [51, 30];
 
 function get_meter_bounds() = meter_bounds_size;
@@ -13,6 +16,9 @@ function get_bezel() = bezel_size;
 function get_meter_body() = meter_body_size;
 function get_sensor_bounds() = sensor_bounds_size;
 function get_sensor_thickness() = sensor_thickness;
+function get_tab_width() = tab_width;
+function get_tab_thickness() = tab_thickness;
+function get_tab_clearance() = tab_clearance;
 function get_screen() = screen_size;
 
 module bezel() {
@@ -79,7 +85,7 @@ module meter() {
 		translate([meter_body_size.x / 2, 0, 15.5])
 			rotate([0, 20, 0])
 			translate([0, 0, 3])
-			cube([1, 9.4, 6], center=true);
+			cube([tab_thickness, tab_width, 6], center=true);
 	}
 
 	tab();
