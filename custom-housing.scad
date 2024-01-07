@@ -288,12 +288,14 @@ module top_shell() {
 			outlet();
 	}
 
+	lip();
+
 	translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness])
 		linear_extrude(box_thickness)
 		title(title_font_size);
 }
 
-translate([meter_pos.x, meter_pos.y, box_thickness]) meter();
+*translate([meter_pos.x, meter_pos.y, box_thickness]) meter();
 translate([sensor_pos.x, sensor_pos.y, box_thickness + sensor_gap]) sensor();
-bottom_shell();
-*top_shell();
+*bottom_shell();
+top_shell();
