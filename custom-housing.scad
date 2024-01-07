@@ -259,7 +259,7 @@ module bottom_shell() {
 		difference() {
 			translate(collar_pos) difference() {
 				strain_relief_collar();
-				linear_extrude(collar_size.y + 1)
+				linear_extrude(collar_size.y)
 					translate([0, sum(collar_widths) / 2])
 					square([collar_size.x + 1, sum(collar_widths) + 1], center=true);
 			}
@@ -292,89 +292,112 @@ module bottom_shell() {
 }
 
 module top_shell() {
-	title_font_size = get_sensor_thickness() - 2;
-	difference() {
-		translate([0, 0, box_height - box_height / 4])
-			mirror([0, 0, 1])
-			tray(
-				[box_width, box_width, box_height / 2],
-				r1=box_radius,
-				r2=box_edge_radius,
-				thickness=box_thickness,
-				center=true
-			);
-		translate([meter_pos.x, meter_pos.y, box_height - box_thickness / 2])
-			cube([get_bezel().x, get_bezel().y, box_thickness + 1], center=true);
-
-		translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 4])
+	module body() {
+		title_font_size = get_sensor_thickness() - 2;
 		difference() {
-			cylinder(r=get_sensor_bounds().y / 2, h=box_thickness);
-			cylinder(r=get_sensor_bounds().y / 2 - 2 - title_font_size, h=box_thickness);
-		}
-
-		translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness / 4])
-		difference() {
-			cylinder(r=get_sensor_bounds().y / 2, h=box_thickness);
-			cylinder(r=get_sensor_bounds().y / 2 - 1, h=box_thickness);
-		}
-
-		translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness - 0.5])
-			linear_extrude(box_thickness + 1)
-			rotate([0, 0, 180])
-			outlet();
-
-		translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness / 2])
-			rotate([0, 0, 180])
-			outlet_cone(box_thickness);
-	}
-
-	lip();
-
-	difference() {
-		union() {
-			translate([0, 0, box_height - box_thickness - support_thickness])
-				linear_extrude(box_thickness / 2 + support_thickness)
-				difference()
-			{
-				rounded_square(
-					[box_width - box_thickness, box_width - box_thickness],
-					r=box_radius - box_thickness / 2,
+			translate([0, 0, box_height - box_height / 4])
+				mirror([0, 0, 1])
+				tray(
+					[box_width, box_width, box_height / 2],
+					r1=box_radius,
+					r2=box_edge_radius,
+					thickness=box_thickness,
 					center=true
 				);
-				translate([0, 2 * meter_pos.y + box_width - box_thickness])
-					square([box_width, box_width], center=true);
-				translate(meter_pos)
-					square([get_meter_body().x, get_meter_body().y] + [fudge, fudge], center=true);
-				translate([meter_pos.x, meter_pos.y])
-					square([
-						get_meter_bounds().x - 2 * get_tab_thickness() + fudge,
-						get_tab_width() + fudge
-					], center=true);
+			translate([meter_pos.x, meter_pos.y, box_height - box_thickness / 2])
+				cube([get_bezel().x, get_bezel().y, box_thickness + 1], center=true);
+
+			translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 4])
+			difference() {
+				cylinder(r=get_sensor_bounds().y / 2, h=box_thickness);
+				cylinder(r=get_sensor_bounds().y / 2 - 2 - title_font_size, h=box_thickness);
 			}
-			translate([0, 0, box_height - box_thickness / 2])
-				mirror([0, 0, 1])
-				shell_buttresses();
+
+			translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness / 4])
+			difference() {
+				cylinder(r=get_sensor_bounds().y / 2, h=box_thickness);
+				cylinder(r=get_sensor_bounds().y / 2 - 1, h=box_thickness);
+			}
+
+			translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness - 0.5])
+				linear_extrude(box_thickness + 1)
+				rotate([0, 0, 180])
+				outlet();
+
+			translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness / 2])
+				rotate([0, 0, 180])
+				outlet_cone(box_thickness);
 		}
 
-		translate([meter_pos.x, meter_pos.y, box_height - box_thickness])
-			linear_extrude(box_thickness)
-			square([get_meter_bounds().x, get_meter_bounds().y], center=true);
-		translate([
-			meter_pos.x,
-			meter_pos.y,
-			box_height - box_thickness - support_thickness - get_tab_clearance(),
-		])
-			linear_extrude(support_thickness)
-			square([get_meter_bounds().x, get_tab_width() + fudge], center=true);
+		lip();
+
+		difference() {
+			union() {
+				translate([0, 0, box_height - box_thickness - support_thickness])
+					linear_extrude(box_thickness / 2 + support_thickness)
+					difference()
+				{
+					rounded_square(
+						[box_width - box_thickness, box_width - box_thickness],
+						r=box_radius - box_thickness / 2,
+						center=true
+					);
+					translate([0, 2 * meter_pos.y + box_width - box_thickness])
+						square([box_width, box_width], center=true);
+					translate(meter_pos)
+						square(
+							[get_meter_body().x, get_meter_body().y] + [fudge, fudge],
+							center=true
+						);
+					translate([meter_pos.x, meter_pos.y])
+						square([
+							get_meter_bounds().x - 2 * get_tab_thickness() + fudge,
+							get_tab_width() + fudge
+						], center=true);
+				}
+				translate([0, 0, box_height - box_thickness / 2])
+					mirror([0, 0, 1])
+					shell_buttresses();
+			}
+
+			translate([meter_pos.x, meter_pos.y, box_height - box_thickness])
+				linear_extrude(box_thickness)
+				square([get_meter_bounds().x, get_meter_bounds().y], center=true);
+			translate([
+				meter_pos.x,
+				meter_pos.y,
+				box_height - box_thickness - support_thickness - get_tab_clearance(),
+			])
+				linear_extrude(support_thickness)
+				square([get_meter_bounds().x, get_tab_width() + fudge], center=true);
+		}
+
+		translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 2])
+			mirror([0, 0, 1])
+			sensor_holder();
+
+		difference() {
+			translate(collar_pos) difference() {
+				strain_relief_collar();
+				translate([0, sum(collar_widths) / 2, -collar_size.y])
+					linear_extrude(collar_size.y)
+					square([collar_size.x + 1, sum(collar_widths) + 1], center=true);
+			}
+		}
+
+		translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 2])
+			linear_extrude(box_thickness / 2)
+			title(title_font_size);
 	}
 
-	translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 2])
-		mirror([0, 0, 1])
-		sensor_holder();
+	module cutout() {
+		translate(collar_pos) strain_relief_collar_cutout();
+	}
 
-	translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 2])
-		linear_extrude(box_thickness / 2)
-		title(title_font_size);
+	difference() {
+		body();
+		cutout();
+	}
 }
 
 *translate([meter_pos.x, meter_pos.y, box_thickness]) meter();
