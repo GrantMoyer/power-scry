@@ -7,6 +7,8 @@ use <meter.scad>
 box_width = 100;
 box_thickness = 2;
 box_height = get_meter_bounds().z + 2 * box_thickness - get_bezel().z;
+box_radius = 8;
+box_edge_radius = 2;
 
 collar_inner_size = [13.5, 9.5];
 collar_outer_size = [16, 13];
@@ -122,16 +124,39 @@ module strain_relief_collar_cutout() {
 	}
 }
 
-module bottom_shell() {
-	module body() {
-		translate([0, 0, box_height / 4])
-			tray(
-				[box_width, box_width, box_height / 2],
-				r1=8,
-				r2=2,
-				thickness=box_thickness,
+module lip(filled=false) {
+	translate([0, 0, box_height / 2])
+		linear_extrude(box_thickness, center=true)
+		difference()
+	{
+		rounded_square(
+			[box_width - box_thickness, box_width - box_thickness],
+			r=box_radius - box_thickness / 2,
+			center=true
+		);
+		if (!filled) {
+			rounded_square(
+				[box_width - 2 * box_thickness, box_width - 2 * box_thickness],
+				r=box_radius - box_thickness,
 				center=true
 			);
+		}
+	}
+}
+
+module bottom_shell() {
+	module body() {
+		difference() {
+			translate([0, 0, box_height / 4])
+				tray(
+					[box_width, box_width, box_height / 2],
+					r1=box_radius,
+					r2=box_edge_radius,
+					thickness=box_thickness,
+					center=true
+				);
+			lip(filled=true);
+		}
 
 		ground_slot_pos = [outlet_pos.x, outlet_pos.y - ground_dist + center_dist];
 		support_height = box_height - conductor_channel_depth;
@@ -177,30 +202,36 @@ module bottom_shell() {
 					);
 			}
 
-		translate(collar_pos) difference() {
-			strain_relief_collar();
-			linear_extrude(collar_size.y + 1)
-				translate([0, sum(collar_widths) / 2])
-				square([collar_size.x + 1, sum(collar_widths) + 1], center=true);
+		difference() {
+			translate(collar_pos) difference() {
+				strain_relief_collar();
+				linear_extrude(collar_size.y + 1)
+					translate([0, sum(collar_widths) / 2])
+					square([collar_size.x + 1, sum(collar_widths) + 1], center=true);
+			}
+			lip();
 		}
 
 		buttress_count = 4;
-		butresss_inset = 16;
-		for (ang=[0:90:359])
-			rotate([0, 0, ang])
-			for (i=[0:buttress_count - 1])
-		{
-			butress_span = box_width - 2 * butresss_inset;
-			butress_interval = butress_span / (buttress_count - 1);
-			x = butresss_inset - box_width / 2 + butress_interval * i;
-			y = -box_width / 2 + box_thickness;
+		butresss_inset = 2 * box_radius;
+		difference() {
+			for (ang=[0:90:359])
+				rotate([0, 0, ang])
+				for (i=[0:buttress_count - 1])
+			{
+				butress_span = box_width - 2 * butresss_inset;
+				butress_interval = butress_span / (buttress_count - 1);
+				x = butresss_inset - box_width / 2 + butress_interval * i;
+				y = -box_width / 2 + 3 * box_thickness / 4;
 
-			translate([x, y, box_thickness / 2])
-				buttress([
-					support_thickness,
-					2 * support_thickness,
-					(box_height - box_thickness) / 2
-				], inset=support_thickness);
+				translate([x, y, box_thickness / 2])
+					buttress([
+						support_thickness,
+						2 * support_thickness + box_thickness / 4,
+						(box_height - box_thickness) / 2
+					], inset=support_thickness);
+			}
+			lip();
 		}
 	}
 
@@ -221,8 +252,8 @@ module top_shell() {
 			mirror([0, 0, 1])
 			tray(
 				[box_width, box_width, box_height / 2],
-				r1=8,
-				r2=2,
+				r1=box_radius,
+				r2=box_edge_radius,
 				thickness=box_thickness,
 				center=true
 			);
