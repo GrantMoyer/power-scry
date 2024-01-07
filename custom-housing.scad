@@ -319,8 +319,12 @@ module top_shell() {
 			square([get_meter_bounds().x, get_tab_width() + fudge], center=true);
 	}
 
-	translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness])
-		linear_extrude(box_thickness)
+	translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 2])
+		mirror([0, 0, 1])
+		sensor_holder();
+
+	translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 2])
+		linear_extrude(box_thickness / 2)
 		title(title_font_size);
 }
 
