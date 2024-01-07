@@ -18,10 +18,10 @@ collar_inner_radius = 1.5;
 collar_outer_radius = 2.5;
 collar_widths = [2, 2, 2];
 
-collar_size = collar_outer_size + 2 * [box_thickness, box_thickness];
+collar_size = collar_inner_size + 4 * [box_thickness, box_thickness];
 collar_radius = collar_outer_radius + box_thickness;
 collar_depth = sum(collar_widths);
-collar_bevel = box_thickness / 2;
+collar_bevel = box_thickness;
 
 support_thickness = 2;
 conductor_channel_depth = 10;
@@ -30,7 +30,7 @@ meter_pos = [0, (get_meter_bounds().y - get_meter_bounds().x) / 2];
 sensor_pos = [-box_width / 4, box_width / 4];
 sensor_gap = (box_height - 2 * box_thickness - get_sensor_bounds().z) / 2;
 outlet_pos = [box_width / 4, box_width / 4];
-collar_pos = [0, box_width / 2 - box_thickness, box_height / 2];
+collar_pos = [0, box_width / 2 - box_thickness / 2, box_height / 2];
 
 mm_per_in = 25.4;
 
@@ -130,10 +130,9 @@ module rounded_square(size, r, center=false) {
 
 module strain_relief_collar() {
 	rotate([-90, 0, 0]) hull() {
-		linear_extrude(collar_depth - collar_bevel)
+		linear_extrude(collar_depth - 2 * collar_bevel, center=true)
 			rounded_square(collar_size, r=collar_radius, center=true);
-		translate([0, 0, collar_depth - collar_bevel])
-			linear_extrude(collar_bevel)
+		linear_extrude(collar_depth, center=true)
 			rounded_square(
 				collar_size - 2 * [collar_bevel, collar_bevel],
 				r=collar_radius - collar_bevel,
@@ -145,11 +144,9 @@ module strain_relief_collar_cutout() {
 	collar_fudge = [fudge, fudge];
 
 	rotate([-90, 0, 0]) {
-		translate([0, 0, -0.5])
-			linear_extrude(sum(collar_widths) + 1)
+		linear_extrude(sum(collar_widths) + 1, center=true)
 			rounded_square(collar_inner_size + collar_fudge, r=collar_inner_radius, center=true);
-		translate([0, 0, collar_widths[0] - fudge / 2])
-			linear_extrude(collar_widths[1] + fudge)
+		linear_extrude(collar_widths[1] + fudge, center=true)
 			rounded_square(collar_outer_size + collar_fudge, r=collar_outer_radius, center=true);
 	}
 }
@@ -260,8 +257,7 @@ module bottom_shell() {
 			translate(collar_pos) difference() {
 				strain_relief_collar();
 				linear_extrude(collar_size.y)
-					translate([0, sum(collar_widths) / 2])
-					square([collar_size.x + 1, sum(collar_widths) + 1], center=true);
+					square([collar_size.x + 1, collar_depth + 1], center=true);
 			}
 			lip();
 		}
@@ -379,9 +375,9 @@ module top_shell() {
 		difference() {
 			translate(collar_pos) difference() {
 				strain_relief_collar();
-				translate([0, sum(collar_widths) / 2, -collar_size.y])
+				translate([0, 0, -collar_size.y])
 					linear_extrude(collar_size.y)
-					square([collar_size.x + 1, sum(collar_widths) + 1], center=true);
+					square([collar_size.x + 1, collar_depth + 1], center=true);
 			}
 		}
 
