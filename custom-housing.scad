@@ -25,8 +25,10 @@ blade_width = 0.085 * mm_per_in;
 live_height = 0.275 * mm_per_in;
 neutral_height = 0.340 * mm_per_in;
 
-support_thickness = 1.5;
+support_thickness = 2;
 conductor_channel_depth = 10;
+
+function sum(vec) = vec * [for (_=vec) 1];
 
 module outlet(offset = 0) {
 	translate([0, ground_dist - center_dist])
@@ -36,6 +38,40 @@ module outlet(offset = 0) {
 	translate([-blade_dist / 2, -center_dist])
 		square([blade_width + 2 * offset, live_height + 2 * offset], center=true);
 
+}
+
+module circle_text(text, r, ang, adjustments, size, font) {
+	echo(len(adjustments));
+	if (adjustments != undef) assert(len(adjustments) == len(text) - 1);
+
+	let (adjustments = adjustments != undef ? concat([0], adjustments) : [for (_=text) 0])
+	{
+		total_adjustments = sum(adjustments);
+
+		for (i=[0:len(text) - 1]) {
+			partial_adjustments = sum([for (j=[0:i]) adjustments[j]]);
+			base_offset = ang * ((len(text) - 1) / 2 - i);
+			adjustment_offset = -partial_adjustments + total_adjustments / 2;
+			rotate([0, 0, sign(r) * (base_offset + adjustment_offset)])
+			translate([0, r])
+			text(text[i], size=size, font=font, halign="center", valign="center");
+		}
+	}
+}
+
+module title(size) {
+	r = get_sensor_bounds().y / 2 - size / 2 - 1;
+	ang = size / r * 75;
+
+	top_text = "POWER";
+	top_adjustments = [-4, 1, 0, -2] * (ang / 25);
+
+	bottom_text = "SCRY";
+	bottom_adjustments = [-4, -2, -3] * (ang / 25);
+
+	font = "DejaVu:style=Bold";
+	circle_text(top_text, r=r, ang=ang, adjustments=top_adjustments, size=size, font=font);
+	circle_text(bottom_text, r=-r, ang=ang, adjustments=bottom_adjustments, size=size, font=font);
 }
 
 module bottom_shell() {
@@ -94,6 +130,7 @@ module bottom_shell() {
 }
 
 module top_shell() {
+	title_font_size = get_sensor_thickness() - 2;
 	difference() {
 		translate([0, 0, box_height - box_height / 4])
 			mirror([0, 0, 1])
@@ -106,10 +143,14 @@ module top_shell() {
 			);
 		translate([meter_pos.x, meter_pos.y, box_height - box_thickness / 2])
 			cube([get_bezel().x, get_bezel().y, box_thickness + 1], center=true);
-		translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 2])
-			cylinder(r=get_sensor_bounds().y / 2, h=box_thickness);
 
-		translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness / 2])
+		translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 4])
+		difference() {
+			cylinder(r=get_sensor_bounds().y / 2, h=box_thickness);
+			cylinder(r=get_sensor_bounds().y / 2 - 2 - title_font_size, h=box_thickness);
+		}
+
+		translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness / 4])
 		difference() {
 			cylinder(r=get_sensor_bounds().y / 2, h=box_thickness);
 			cylinder(r=get_sensor_bounds().y / 2 - 1, h=box_thickness);
@@ -120,9 +161,13 @@ module top_shell() {
 			rotate([0, 0, 180])
 			outlet();
 	}
+
+	translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness])
+		linear_extrude(box_thickness)
+		title(title_font_size);
 }
 
 translate([meter_pos.x, meter_pos.y, box_thickness]) meter();
 translate([sensor_pos.x, sensor_pos.y, box_thickness + sensor_gap]) sensor();
 bottom_shell();
-*top_shell();
+top_shell();
