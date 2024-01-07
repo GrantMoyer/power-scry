@@ -148,8 +148,8 @@ module strain_relief_collar_cutout() {
 		translate([0, 0, -0.5])
 			linear_extrude(sum(collar_widths) + 1)
 			rounded_square(collar_inner_size + collar_fudge, r=collar_inner_radius, center=true);
-		translate([0, 0, collar_widths[0]])
-			linear_extrude(collar_widths[1])
+		translate([0, 0, collar_widths[0] - fudge / 2])
+			linear_extrude(collar_widths[1] + fudge)
 			rounded_square(collar_outer_size + collar_fudge, r=collar_outer_radius, center=true);
 	}
 }
