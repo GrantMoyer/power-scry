@@ -27,16 +27,21 @@ module rounded_block(size, r1, r2) {
 	}
 }
 
-module tray(size, r1, r2, thickness) {
-	difference() {
-		rounded_block(size, r1=r1, r2=r2);
-		translate([thickness, thickness, thickness])
-			rounded_block(
-				size - [2 * thickness, 2 * thickness, 0],
-				r1=max(0, r1 - thickness),
-				r2=max(0, r2 - thickness)
-			);
+module tray(size, r1, r2, thickness, center=false) {
+	module body() {
+		difference() {
+			rounded_block(size, r1=r1, r2=r2);
+			translate([thickness, thickness, thickness])
+				rounded_block(
+					size - [2 * thickness, 2 * thickness, 0],
+					r1=max(0, r1 - thickness),
+					r2=max(0, r2 - thickness)
+				);
+		}
 	}
+
+	if (center) translate(-size / 2) body();
+	else body();
 }
 
 module ground_channel(size, thickness, wing_size) {
@@ -219,20 +224,15 @@ module bottom_shell() {
 	}
 }
 
-module ground_slot(size) {
-	r = size.y / 2;
-	assert(r <= size.x);
+module ground_slot(width) {
+	r = width / 2;
 
-	cube_width = size.x - r;
-
-	translate([size.x / 2 - r, 0, 0]) {
+	translate([0, r - width / 2]) {
 		difference() {
-			cylinder(h=size.z, r=r);
-			translate([-r - cube_width / 2, 0, size.z / 2])
-				cube([2 * r, size.y, 2 * size.z], center=true);
+			circle(r=r);
+			translate([0, r + r / 2]) square([width, width], center=true);
 		}
-		translate([-cube_width / 2, 0, size.z / 2])
-			cube([cube_width, size.y, size.z], center=true);
+		translate([0, r / 2]) square([width, r], center=true);
 	}
 }
 
@@ -305,7 +305,10 @@ module top_shell() {
 
 		for (x=ground_slot_poses) {
 			ground_slot_pos = [x, 19.25, 0];
-			translate(ground_slot_pos + [0, 0, 1]) ground_slot([7.75, 7.75, 3]);
+			translate(ground_slot_pos + [0, 0, 1])
+				linear_extrude(3)
+				rotate([0, 0, 90])
+				ground_slot(7.75);
 
 			live_slot_pos = ground_slot_pos + [12.5, 6.5, 0];
 			translate(live_slot_pos + [0, 0, 3]) cube([9, 4.25, 4.25], center=true);
@@ -381,10 +384,19 @@ module top_shell() {
 
 		for (x=ground_slot_poses) {
 			ground_slot_pos = [x, 19.25, 0];
-			translate(ground_slot_pos - [0, 0, 1]) ground_slot([5.75, 5.75, 6]);
+			translate(ground_slot_pos - [0, 0, 1])
+				linear_extrude(6)
+				rotate([0, 0, 90])
+				ground_slot(5.75);
 			hull() {
-				translate(ground_slot_pos - [0, 0, 2]) ground_slot([9, 9, 1]);
-				translate(ground_slot_pos) ground_slot([5, 5, 1]);
+				translate(ground_slot_pos - [0, 0, 2])
+					linear_extrude(1)
+					rotate([0, 0, 90])
+					ground_slot(9);
+				translate(ground_slot_pos)
+					linear_extrude(1)
+					rotate([0, 0, 90])
+					ground_slot(5);
 			}
 
 			live_slot_pos = ground_slot_pos + [12.5, 6.5, 0];
@@ -410,4 +422,4 @@ module top_shell() {
 }
 
 bottom_shell();
-translate([0, 38.5, 11.5 + 12]) rotate([180, 0, 0]) top_shell();
+translate([0, 38.5 + 5, 0]) top_shell();
