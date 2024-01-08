@@ -275,27 +275,24 @@ module path(points, thickness) {
 	}
 }
 
-module conductor_channel_bump() {
-	left_points = [
-		[0, 0],
+module conductor_channel_bump(thickness, left_extension=0, right_extension=0) {
+	points = [
+		[-left_extension, 0],
 		[3, 0],
 		[4.5, 1],
-	];
-	points = [
-		each left_points,
-		for (i=[len(left_points) - 1:-1:0]) [19.75 - left_points[i].x, left_points[i].y],
+		[19.75 - 4.5, 1],
+		[19.75 - 3, 0],
+		[19.75 + right_extension, 0],
 	];
 
-	translate([-19.75 / 2, 0]) path(points, thickness=1.25);
+	translate([-19.75 / 2, 0]) path(points, thickness=thickness);
 }
 
 module conductor_channel(left_extension=6.5, right_extension=6.5) {
-	translate([0, 1.5]) conductor_channel_bump();
-	translate([0, -1.5]) mirror([0, 1, 0]) conductor_channel_bump();
-	translate([-(19.75 + left_extension) / 2, 1.5])
-		line([left_extension + 1.25, 1.25], round=[true, true]);
-	translate([(19.75 + right_extension) / 2, 1.5])
-		line([right_extension + 1.25, 1.25], round=[true, true]);
+	thickness = 1.25;
+
+	translate([0, 1.5]) conductor_channel_bump(thickness, left_extension, right_extension);
+	translate([0, -1.5]) mirror([0, 1, 0]) conductor_channel_bump(thickness);
 }
 
 module top_shell() {

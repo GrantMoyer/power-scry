@@ -25,6 +25,13 @@ collar_bevel = box_thickness;
 
 support_thickness = 2;
 conductor_channel_depth = 10;
+conductor_support_depth = conductor_channel_depth - 4.5;
+ground_support_depth = conductor_support_depth - 1.25;
+conductor_width = 1;
+
+ground_peg_dist = 14;
+ground_peg_radius = 0.5;
+ground_peg_height = conductor_support_depth + 1.5;
 
 meter_pos = [0, (get_meter_bounds().y - get_meter_bounds().x) / 2];
 sensor_pos = [-box_width / 4, box_width / 4];
@@ -233,23 +240,39 @@ module bottom_shell() {
 
 		ground_slot_pos = [outlet_pos.x, outlet_pos.y - ground_dist + center_dist];
 		support_height = box_height - conductor_channel_depth;
+		ground_support_height = box_height - conductor_support_depth - fudge;
 		translate([ground_slot_pos.x, ground_slot_pos.y, box_thickness / 2])
-			linear_extrude(support_height + box_thickness / 2)
+			linear_extrude(ground_support_height - box_thickness / 2)
 			rotate([0, 0, 180])
 			difference() {
 				ground_slot(ground_width + 2 * support_thickness);
 				ground_slot(ground_width);
 			}
 
-		wing_length = 5;
+		wing_length = (blade_dist - ground_width + conductor_width + fudge) / 2;
 		for (dir=[-1,1])
 			translate([
 				ground_slot_pos.x + dir * (wing_length + ground_width + support_thickness) / 2,
 				ground_slot_pos.y,
 				box_thickness / 2
 			])
-			linear_extrude(support_height + box_thickness / 2)
+			linear_extrude(support_height - box_thickness / 2)
 			line([wing_length + support_thickness, support_thickness], round=[true, true]);
+
+		translate([outlet_pos.x, outlet_pos.y + center_dist + 19.75 / 2, box_thickness / 2])
+			linear_extrude(support_height - box_thickness / 2)
+			line([
+				blade_dist + conductor_width + fudge + 2 * support_thickness,
+				support_thickness
+			], round=[true, true]);
+
+		translate([outlet_pos.x, outlet_pos.y + center_dist + 19.75 / 2, box_thickness / 2])
+			linear_extrude(ground_support_height - box_thickness / 2)
+			rotate([0, 0, 90])
+			line([
+				ground_width + 2 * support_thickness,
+				support_thickness
+			], round=[true, true]);
 
 		translate([sensor_pos.x, sensor_pos.y, box_thickness / 2]) sensor_holder();
 
@@ -314,16 +337,11 @@ module top_shell() {
 				cylinder(r=get_sensor_bounds().y / 2, h=box_thickness);
 				cylinder(r=get_sensor_bounds().y / 2 - 1, h=box_thickness);
 			}
-
-			translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness - 0.5])
-				linear_extrude(box_thickness + 1)
-				rotate([0, 0, 180])
-				outlet();
-
-			translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness / 2])
-				rotate([0, 0, 180])
-				outlet_cone(box_thickness);
 		}
+
+		translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 2])
+			linear_extrude(box_thickness / 2)
+			title(title_font_size);
 
 		lip();
 
@@ -381,13 +399,90 @@ module top_shell() {
 			}
 		}
 
-		translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 2])
-			linear_extrude(box_thickness / 2)
-			title(title_font_size);
+		channel_gap = conductor_width + fudge;
+		translate([0, 0, box_height - conductor_channel_depth])
+			linear_extrude(conductor_channel_depth - box_thickness / 2)
+			for (dir=[-1, 1])
+			for (y_scale=[-1, 1])
+			translate(outlet_pos + [dir * blade_dist / 2, center_dist])
+			rotate([0, 0, 90])
+			scale([1, y_scale])
+			translate([0, (channel_gap + support_thickness) / 2])
+			conductor_channel_bump(support_thickness, left_extension=y_scale == dir ? -2 : ground_dist - 19.75 / 2);
+
+		translate([0, 0, box_height - conductor_support_depth])
+			linear_extrude(conductor_support_depth - box_thickness / 2)
+			for (dir=[-1, 1])
+			for (y=[-19.75 / 2 + 2, 19.75 / 2])
+			translate(outlet_pos + [dir * blade_dist / 2, center_dist + y])
+			line([channel_gap + 2 * support_thickness, support_thickness], round=[true, true]);
+
+		blade_slot_height = conductor_support_depth - box_thickness / 2;
+		for (pair=[[-1, neutral_height], [1, live_height]])
+			translate([
+				outlet_pos.x + pair[0] * blade_dist / 2,
+				outlet_pos.y + center_dist,
+				box_height - conductor_support_depth + blade_slot_height / 2,
+			])
+			cube([
+				blade_width + 2 * support_thickness,
+				pair[1] + 2 * support_thickness,
+				blade_slot_height,
+			], center=true);
+
+		translate([
+			outlet_pos.x,
+			outlet_pos.y + center_dist - ground_dist,
+			box_height - ground_support_depth
+		])
+			linear_extrude(ground_support_depth - box_thickness / 2)
+			rotate([0, 0, 180])
+			ground_slot(ground_width + 2 * support_thickness);
+
+		translate([
+			outlet_pos.x,
+			outlet_pos.y + center_dist - ground_dist + ground_peg_dist,
+			box_height - conductor_support_depth,
+		])
+			linear_extrude(conductor_support_depth - box_thickness / 2)
+			rotate([0, 0, 90])
+			line([
+				(ground_peg_dist - 2 * support_thickness - ground_width / 2) * 2,
+				support_thickness
+			], round=[true, true]);
+
+		translate([
+			outlet_pos.x,
+			outlet_pos.y + center_dist - ground_dist + ground_peg_dist,
+			box_height - ground_support_depth,
+		])
+			linear_extrude(ground_support_depth - box_thickness / 2)
+			rotate([0, 0, 90])
+			line([
+				19.75 + ground_width - 2 * (ground_peg_dist - ground_dist - support_thickness),
+				support_thickness
+			], round=[true, true]);
+
+		translate([
+			outlet_pos.x,
+			outlet_pos.y + center_dist - ground_dist + ground_peg_dist,
+			box_height - box_thickness / 2,
+		])
+			mirror([0, 0, 1])
+			capped_cylinder(h=ground_peg_height - box_thickness / 2, r=ground_peg_radius);
 	}
 
 	module cutout() {
 		translate(collar_pos) strain_relief_collar_cutout();
+
+		translate([outlet_pos.x, outlet_pos.y, box_height - conductor_support_depth / 2])
+			linear_extrude(conductor_support_depth + 1, center=true)
+			rotate([0, 0, 180])
+			outlet();
+
+		translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness / 2])
+			rotate([0, 0, 180])
+			outlet_cone(box_thickness);
 	}
 
 	difference() {
