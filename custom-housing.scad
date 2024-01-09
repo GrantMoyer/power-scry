@@ -36,8 +36,11 @@ outlet_pos = [box_width / 4, box_width / 4];
 collar_pos = [0, box_width / 2 - box_thickness / 2, box_height / 2];
 
 screw_post_depth = box_height / 2;
+screw_channel_height = box_height - screw_post_depth;
+screw_channel_thickness = 1.5;
 screw_post_inner_radius = 1.125;
 screw_post_outer_radius = screw_post_inner_radius + support_thickness;
+screw_head_radius = 2.25;
 meter_margin = (box_width / 2 - (-meter_pos.y + get_meter_body().y / 2));
 screw_post_positions = [
 	[box_width / 2 - box_radius, box_width / 2 - box_radius],
@@ -314,10 +317,36 @@ module bottom_shell() {
 			square(meter_slot_size + 2 * [support_thickness, support_thickness], center=true);
 			square(meter_slot_size, center=true);
 		}
+
+		difference() {
+			for(pos=screw_post_positions)
+				translate([pos.x, pos.y, box_thickness / 2])
+				cylinder(
+					h=screw_channel_height - box_thickness / 2,
+					r=screw_head_radius + support_thickness
+				);
+			translate([meter_pos.x, meter_pos.y, screw_channel_height / 2])
+				cube([
+					get_meter_body().x + fudge,
+					get_meter_body().y + fudge,
+					screw_channel_height + 1
+				], center=true);
+			lip();
+		}
 	}
 
 	module cutout() {
 		translate(collar_pos) strain_relief_collar_cutout();
+		for(pos=screw_post_positions) translate([pos.x, pos.y, -screw_channel_thickness]) {
+			cylinder(
+				h=screw_channel_height,
+				r=screw_head_radius + fudge
+			);
+			cylinder(
+				h=screw_channel_height + 2 * screw_channel_thickness,
+				r=screw_post_inner_radius + fudge
+			);
+		}
 	}
 
 	difference() {
@@ -528,5 +557,5 @@ module top_shell() {
 
 *translate([meter_pos.x, meter_pos.y, box_thickness]) meter();
 translate([sensor_pos.x, sensor_pos.y, box_thickness + sensor_gap]) sensor();
-*bottom_shell();
-top_shell();
+bottom_shell();
+*top_shell();
