@@ -29,15 +29,32 @@ conductor_support_depth = conductor_channel_depth - 4.5;
 ground_support_depth = conductor_support_depth - 1.25;
 conductor_width = 1;
 
-ground_peg_dist = 14;
-ground_peg_radius = 0.5;
-ground_peg_height = conductor_support_depth + 1.5;
-
 meter_pos = [0, (get_meter_bounds().y - get_meter_bounds().x) / 2];
 sensor_pos = [-box_width / 4, box_width / 4];
 sensor_gap = (box_height - 2 * box_thickness - get_sensor_bounds().z) / 2;
 outlet_pos = [box_width / 4, box_width / 4];
 collar_pos = [0, box_width / 2 - box_thickness / 2, box_height / 2];
+
+screw_post_depth = box_height / 2;
+screw_post_inner_radius = 1.125;
+screw_post_outer_radius = screw_post_inner_radius + support_thickness;
+meter_margin = (box_width / 2 - (-meter_pos.y + get_meter_body().y / 2));
+screw_post_positions = [
+	[box_width / 2 - box_radius, box_width / 2 - box_radius],
+	[-box_width / 2 + box_radius, box_width / 2 - box_radius],
+	[
+		box_width / 2 - meter_margin + (meter_margin - box_thickness) * sqrt(2) / 4,
+		-box_width / 2 + meter_margin - (meter_margin - box_thickness) * sqrt(2) / 4
+	],
+	[
+		-box_width / 2 + meter_margin - (meter_margin - box_thickness) * sqrt(2) / 4,
+		-box_width / 2 + meter_margin - (meter_margin - box_thickness) * sqrt(2) / 4
+	],
+];
+
+ground_peg_dist = 14;
+ground_peg_radius = 0.5;
+ground_peg_height = conductor_support_depth + 1.5;
 
 mm_per_in = 25.4;
 
@@ -92,7 +109,6 @@ module outlet_cone(h) {
 }
 
 module circle_text(text, r, ang, adjustments, size, font) {
-	echo(len(adjustments));
 	if (adjustments != undef) assert(len(adjustments) == len(text) - 1);
 
 	let (adjustments = adjustments != undef ? concat([0], adjustments) : [for (_=text) 0])
@@ -195,9 +211,9 @@ module sensor_holder() {
 
 		for (ang=[0:180:359])
 			rotate([0, 0, 90 + ang])
-			translate([0, -3 * support_thickness - get_sensor_thickness() / 2])
+			translate([0, -3.1 * support_thickness - get_sensor_thickness() / 2])
 			buttress(
-				[support_thickness, 3 * support_thickness, 2 * sensor_gap + box_thickness / 2],
+				[support_thickness, 3.1 * support_thickness, 2 * sensor_gap + box_thickness / 2],
 				inset=support_thickness
 			);
 	}
@@ -470,6 +486,25 @@ module top_shell() {
 		])
 			mirror([0, 0, 1])
 			capped_cylinder(h=ground_peg_height - box_thickness / 2, r=ground_peg_radius);
+
+		difference() {
+			for(pos=screw_post_positions)
+				translate([pos.x, pos.y, box_height - screw_post_depth])
+				linear_extrude(screw_post_depth - box_thickness / 2)
+				difference()
+			{
+				circle(screw_post_outer_radius);
+				circle(screw_post_inner_radius);
+			}
+			translate([meter_pos.x, meter_pos.y, box_height - box_thickness / 2])
+				cube([get_bezel().x, get_bezel().y, box_thickness + 1], center=true);
+			translate([meter_pos.x, meter_pos.y, box_height - screw_post_depth / 2])
+				cube([
+					get_meter_body().x + fudge,
+					get_meter_body().y + fudge,
+					screw_post_depth + 1
+				], center=true);
+		}
 	}
 
 	module cutout() {
