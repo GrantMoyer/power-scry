@@ -338,10 +338,13 @@ module bottom_shell() {
 	module cutout() {
 		translate(collar_pos) strain_relief_collar_cutout();
 		for(pos=screw_post_positions) translate([pos.x, pos.y, -screw_channel_thickness]) {
-			cylinder(
-				h=screw_channel_height,
-				r=screw_head_radius + fudge
-			);
+			hull() {
+				cylinder(h=screw_channel_height, r=screw_head_radius + fudge);
+				cylinder(
+					h=screw_channel_height + screw_head_radius - screw_post_inner_radius,
+					r=screw_post_inner_radius + fudge
+				);
+			}
 			cylinder(
 				h=screw_channel_height + 2 * screw_channel_thickness,
 				r=screw_post_inner_radius + fudge
