@@ -8,7 +8,7 @@ box_width = 100;
 box_thickness = 2;
 box_height = get_meter_bounds().z + 2 * box_thickness - get_bezel().z;
 box_radius = 8;
-box_edge_radius = 2;
+box_edge_radius = 1;
 
 fudge = 0.5;
 
@@ -72,6 +72,40 @@ live_height = 0.275 * mm_per_in;
 neutral_height = 0.340 * mm_per_in;
 
 function sum(vec) = vec * [for (_=vec) 1];
+
+module rounded_square(size, r, center=false) {
+	assert(r <= min(size.x, size.y) / 2);
+
+	minkowski() {
+		square(size - 2 * [r, r], center=center);
+		if (center) circle(r);
+		else translate([r, r]) circle(r);
+	}
+}
+
+module tray(size, r1, r2, thickness, center=false) {
+	module body() {
+		difference() {
+			hull() {
+				translate([0, 0, r2])
+					linear_extrude(size.z - r2)
+					rounded_square([size.x, size.y], r=r1);
+				translate([r2, r2, 0])
+					linear_extrude(size.z)
+					rounded_square([size.x - 2 * r2, size.y - 2 * r2], r=r1 - r2);
+			}
+			translate([thickness, thickness, thickness])
+				rounded_block(
+					size - [2 * thickness, 2 * thickness, 0],
+					r1=max(0, r1 - thickness),
+					r2=max(0, r2 - thickness)
+				);
+		}
+	}
+
+	if (center) translate(-size / 2) body();
+	else body();
+}
 
 module outlet() {
 	translate([0, ground_dist - center_dist])
@@ -142,16 +176,6 @@ module title(size) {
 	font = "DejaVu:style=Bold";
 	circle_text(top_text, r=r, ang=ang, adjustments=top_adjustments, size=size, font=font);
 	circle_text(bottom_text, r=-r, ang=ang, adjustments=bottom_adjustments, size=size, font=font);
-}
-
-module rounded_square(size, r, center=false) {
-	assert(r <= min(size.x, size.y) / 2);
-
-	minkowski() {
-		square(size - 2 * [r, r], center=center);
-		if (center) circle(r);
-		else translate([r, r]) circle(r);
-	}
 }
 
 module strain_relief_collar() {
