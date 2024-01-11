@@ -163,19 +163,44 @@ module circle_text(text, r, ang, adjustments, size, font) {
 	}
 }
 
-module title(size) {
-	r = get_sensor_bounds().y / 2 - size / 2 - 1;
-	ang = size / r * 75;
+module logo(size) {
+	module words() {
+		r = (get_sensor_bounds().y - size) / 2 - 1;
+		ang = size / r * 75;
 
-	top_text = "POWER";
-	top_adjustments = [-4, 1, 0, -2] * (ang / 25);
+		top_text = "POWER";
+		top_adjustments = [-4, 1, 0, -2] * (ang / 25);
 
-	bottom_text = "SCRY";
-	bottom_adjustments = [-4, -2, -3] * (ang / 25);
+		bot_text = "SCRY";
+		bot_adjustments = [-4, -2, -3] * (ang / 25);
 
-	font = "DejaVu:style=Bold";
-	circle_text(top_text, r=r, ang=ang, adjustments=top_adjustments, size=size, font=font);
-	circle_text(bottom_text, r=-r, ang=ang, adjustments=bottom_adjustments, size=size, font=font);
+		font = "DejaVu:style=Bold";
+
+		circle_text(top_text, r=r, ang=ang, adjustments=top_adjustments, size=size, font=font);
+		circle_text(bot_text, r=-r, ang=ang, adjustments=bot_adjustments, size=size, font=font);
+	}
+
+	circle(r=get_sensor_bounds().y / 2 - 2 - size);
+	words();
+	top_cutoff = 20;
+	bot_cutoff = 35;
+	r_cutoff = get_sensor_bounds().y;
+	difference() {
+		circle(r=get_sensor_bounds().y / 2 - 2);
+		circle(r=get_sensor_bounds().y / 2 - size);
+		polygon(points=[
+			[0, 0],
+			r_cutoff * [cos(top_cutoff), sin(top_cutoff)],
+			r_cutoff * [0, 1],
+			r_cutoff * [-cos(top_cutoff), sin(top_cutoff)],
+		]);
+		polygon(points=[
+			[0, 0],
+			r_cutoff * [-cos(bot_cutoff), -sin(bot_cutoff)],
+			r_cutoff * [0, -1],
+			r_cutoff * [cos(bot_cutoff), -sin(bot_cutoff)],
+		]);
+	}
 }
 
 module strain_relief_collar() {
@@ -384,7 +409,7 @@ module bottom_shell() {
 
 module top_shell() {
 	module body() {
-		title_font_size = get_sensor_thickness() - 2;
+		logo_font_size = get_sensor_thickness() - 2;
 		difference() {
 			translate([0, 0, box_height - box_height / 4])
 				mirror([0, 0, 1])
@@ -399,10 +424,7 @@ module top_shell() {
 				cube([get_bezel().x, get_bezel().y, box_thickness + 1], center=true);
 
 			translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 4])
-			difference() {
-				cylinder(r=get_sensor_bounds().y / 2, h=box_thickness);
-				cylinder(r=get_sensor_bounds().y / 2 - 2 - title_font_size, h=box_thickness);
-			}
+			cylinder(r=get_sensor_bounds().y / 2, h=box_thickness);
 
 			translate([outlet_pos.x, outlet_pos.y, box_height - box_thickness / 4])
 			difference() {
@@ -413,7 +435,7 @@ module top_shell() {
 
 		translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 2])
 			linear_extrude(box_thickness / 2)
-			title(title_font_size);
+			logo(logo_font_size);
 
 		lip();
 
@@ -582,7 +604,7 @@ module top_shell() {
 	}
 }
 
-*translate([meter_pos.x, meter_pos.y, box_thickness]) meter();
+translate([meter_pos.x, meter_pos.y, box_thickness]) meter();
 translate([sensor_pos.x, sensor_pos.y, box_thickness + sensor_gap]) sensor();
 bottom_shell();
-*top_shell();
+top_shell();
