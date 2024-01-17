@@ -109,39 +109,39 @@ module tray(size, r1, r2, thickness, center=false) {
 
 module outlet() {
 	translate([0, ground_dist - center_dist])
-		ground_slot(ground_width);
+		ground_slot(ground_width + fudge);
 	translate([blade_dist / 2, -center_dist])
-		square([blade_width, neutral_height], center=true);
+		square([blade_width + fudge, neutral_height + fudge], center=true);
 	translate([-blade_dist / 2, -center_dist])
-		square([blade_width, live_height], center=true);
+		square([blade_width + fudge, live_height + fudge], center=true);
 }
 
 module outlet_cone(h) {
 	hull() {
 		translate([0, ground_dist - center_dist, 0])
 			linear_extrude(h / 2)
-			ground_slot(ground_width);
+			ground_slot(ground_width + fudge);
 		translate([0, ground_dist - center_dist, h])
 			linear_extrude(h / 2)
-			ground_slot(ground_width + 2 * h);
+			ground_slot(ground_width + fudge + 2 * h);
 	}
 
 	hull() {
 		translate([blade_dist / 2, -center_dist, 0])
 			linear_extrude(h / 2)
-			square([blade_width, neutral_height], center=true);
+			square([blade_width + fudge, neutral_height + fudge], center=true);
 		translate([blade_dist / 2, -center_dist, h])
 			linear_extrude(h / 2)
-			square([blade_width + 2 * h, neutral_height + 2 * h], center=true);
+			square([blade_width + fudge + 2 * h, neutral_height + fudge + 2 * h], center=true);
 	}
 
 	hull() {
 		translate([-blade_dist / 2, -center_dist, 0])
 			linear_extrude(h / 2)
-			square([blade_width, live_height], center=true);
+			square([blade_width + fudge, live_height + fudge], center=true);
 		translate([-blade_dist / 2, -center_dist, h])
 			linear_extrude(h / 2)
-			square([blade_width + 2 * h, live_height + 2 * h], center=true);
+			square([blade_width + fudge + 2 * h, live_height + fudge + 2 * h], center=true);
 	}
 }
 
@@ -221,7 +221,7 @@ module strain_relief_collar_cutout() {
 	rotate([-90, 0, 0]) {
 		linear_extrude(sum(collar_widths) + 1, center=true)
 			rounded_square(collar_inner_size + collar_fudge, r=collar_inner_radius, center=true);
-		linear_extrude(collar_widths[1] + fudge, center=true)
+		linear_extrude(collar_widths[1] + 2 * fudge, center=true)
 			rounded_square(collar_outer_size + collar_fudge, r=collar_outer_radius, center=true);
 	}
 }
@@ -313,14 +313,15 @@ module bottom_shell() {
 			linear_extrude(ground_support_height - box_thickness / 2)
 			rotate([0, 0, 180])
 			difference() {
-				ground_slot(ground_width + 2 * support_thickness);
-				ground_slot(ground_width);
+				ground_slot(ground_width + fudge + 2 * support_thickness);
+				ground_slot(ground_width + fudge);
 			}
 
-		wing_length = (blade_dist - ground_width + conductor_width + fudge) / 2;
+		wing_length = (blade_dist - ground_width + conductor_width) / 2;
 		for (dir=[-1,1])
 			translate([
-				ground_slot_pos.x + dir * (wing_length + ground_width + support_thickness) / 2,
+				ground_slot_pos.x
+					+ dir * (wing_length + ground_width + support_thickness + fudge) / 2,
 				ground_slot_pos.y,
 				box_thickness / 2
 			])
@@ -358,9 +359,9 @@ module bottom_shell() {
 			lip();
 		}
 
-		meter_slot_size = [get_meter_body().x + fudge, get_meter_body().y + fudge];
-		translate([meter_pos.x, meter_pos.y, box_thickness])
-			linear_extrude(support_thickness)
+		meter_slot_size = [get_meter_body().x + 2 * fudge, get_meter_body().y + 2 * fudge];
+		translate([meter_pos.x, meter_pos.y, box_thickness / 2])
+			linear_extrude(support_thickness + box_thickness / 2)
 			difference()
 		{
 			square(meter_slot_size + 2 * [support_thickness, support_thickness], center=true);
@@ -376,8 +377,8 @@ module bottom_shell() {
 				);
 			translate([meter_pos.x, meter_pos.y, screw_channel_height / 2])
 				cube([
-					get_meter_body().x + fudge,
-					get_meter_body().y + fudge,
+					get_meter_body().x + 2 * fudge,
+					get_meter_body().y + 2 * fudge,
 					screw_channel_height + 1
 				], center=true);
 			lip();
@@ -420,8 +421,6 @@ module top_shell() {
 					thickness=box_thickness,
 					center=true
 				);
-			translate([meter_pos.x, meter_pos.y, box_height - box_thickness / 2])
-				cube([get_bezel().x, get_bezel().y, box_thickness + 1], center=true);
 
 			translate([sensor_pos.x, sensor_pos.y, box_height - box_thickness / 4])
 			cylinder(r=get_sensor_bounds().y / 2, h=box_thickness);
@@ -452,11 +451,6 @@ module top_shell() {
 					);
 					translate([0, 2 * meter_pos.y + box_width - box_thickness])
 						square([box_width, box_width], center=true);
-					translate(meter_pos)
-						square(
-							[get_meter_body().x, get_meter_body().y] + [fudge, fudge],
-							center=true
-						);
 					translate([meter_pos.x, meter_pos.y])
 						square([
 							get_meter_bounds().x - 2 * get_tab_thickness() + fudge,
@@ -468,9 +462,6 @@ module top_shell() {
 					shell_buttresses();
 			}
 
-			translate([meter_pos.x, meter_pos.y, box_height - box_thickness])
-				linear_extrude(box_thickness)
-				square([get_meter_bounds().x, get_meter_bounds().y], center=true);
 			translate([
 				meter_pos.x,
 				meter_pos.y,
@@ -520,7 +511,7 @@ module top_shell() {
 			])
 			cube([
 				blade_width + 2 * support_thickness,
-				pair[1] + 2 * support_thickness,
+				pair[1] + fudge + 2 * support_thickness,
 				blade_slot_height,
 			], center=true);
 
@@ -531,7 +522,7 @@ module top_shell() {
 		])
 			linear_extrude(ground_support_depth - box_thickness / 2)
 			rotate([0, 0, 180])
-			ground_slot(ground_width + 2 * support_thickness);
+			ground_slot(ground_width + fudge + 2 * support_thickness);
 
 		translate([
 			outlet_pos.x,
@@ -574,18 +565,24 @@ module top_shell() {
 				circle(screw_post_outer_radius);
 				circle(screw_post_inner_radius);
 			}
-			translate([meter_pos.x, meter_pos.y, box_height - box_thickness / 2])
-				cube([get_bezel().x, get_bezel().y, box_thickness + 1], center=true);
-			translate([meter_pos.x, meter_pos.y, box_height - screw_post_depth / 2])
-				cube([
-					get_meter_body().x + fudge,
-					get_meter_body().y + fudge,
-					screw_post_depth + 1
-				], center=true);
 		}
 	}
 
 	module cutout() {
+		translate([meter_pos.x, meter_pos.y, box_height - box_thickness])
+			linear_extrude(box_thickness + 1)
+			minkowski() {
+				square([get_bezel().x + fudge, get_bezel().y + fudge], center=true);
+				circle(r=fudge);
+			}
+
+		translate([meter_pos.x, meter_pos.y, box_height - screw_post_depth / 2])
+			cube([
+				get_meter_body().x + 2 * fudge,
+				get_meter_body().y + 2 * fudge,
+				screw_post_depth + 1
+			], center=true);
+
 		translate(collar_pos) strain_relief_collar_cutout();
 
 		translate([outlet_pos.x, outlet_pos.y, box_height - conductor_support_depth / 2])
