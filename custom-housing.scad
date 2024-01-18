@@ -73,6 +73,11 @@ neutral_height = 0.340 * mm_per_in;
 
 function sum(vec) = vec * [for (_=vec) 1];
 
+module union_mirror(norm) {
+	children();
+	mirror(norm) children();
+}
+
 module rounded_square(size, r, center=false) {
 	assert(r <= min(size.x, size.y) / 2);
 
@@ -226,22 +231,48 @@ module strain_relief_collar_cutout() {
 	}
 }
 
-module lip(filled=false) {
-	translate([0, 0, box_height / 2])
-		linear_extrude(box_thickness, center=true)
-		difference()
-	{
+module lip(filled=false, truncate_inner=true) {
+	module rounded_csquare(width, radius) {
 		rounded_square(
-			[box_width - box_thickness, box_width - box_thickness],
-			r=box_radius - box_thickness / 2,
+			[width, width],
+			r=radius,
 			center=true
 		);
+	}
+
+	lip_width = box_width - box_thickness;
+	lip_radius = box_radius - box_thickness / 2;
+	lip_thickness = box_thickness / 2;
+	lip_height = box_thickness;
+
+	lip_inset = lip_thickness / 4;
+
+	translate([0, 0, box_height / 2])
+	difference() {
+		hull() {
+			linear_extrude(lip_inset, center=true)
+				rounded_csquare(lip_width, lip_radius);
+			linear_extrude(lip_height, center=true)
+				rounded_csquare(lip_width - 2 * lip_inset, lip_radius - lip_inset);
+		}
 		if (!filled) {
-			rounded_square(
-				[box_width - 2 * box_thickness, box_width - 2 * box_thickness],
-				r=box_radius - box_thickness,
-				center=true
-			);
+			if (truncate_inner)
+				linear_extrude(lip_height * 2, center=true)
+				rounded_csquare(lip_width - 2 * lip_thickness, lip_radius - lip_thickness);
+			union_mirror([0, 0, 1]) hull() {
+				translate([0, 0, lip_height - lip_inset / 2])
+					linear_extrude(lip_height)
+					rounded_csquare(
+						lip_width - 2 * lip_thickness + 4 * lip_inset,
+						lip_radius - lip_thickness + 2 * lip_inset
+					);
+				translate([0, 0, lip_inset - lip_height / 2])
+					linear_extrude(lip_height)
+					rounded_csquare(
+						lip_width - 2 * lip_thickness - 2 * lip_inset,
+						lip_radius - lip_thickness - lip_inset
+					);
+			}
 		}
 	}
 }
@@ -351,12 +382,12 @@ module bottom_shell() {
 				linear_extrude(collar_size.y)
 					square([collar_size.x + 1, collar_depth + 1], center=true);
 			}
-			lip();
+			lip(truncate_inner=false);
 		}
 
 		difference() {
 			translate([0, 0, box_thickness / 2]) shell_buttresses();
-			lip();
+			lip(truncate_inner=false);
 		}
 
 		meter_slot_size = [get_meter_body().x + 2 * fudge, get_meter_body().y + 2 * fudge];
@@ -381,7 +412,7 @@ module bottom_shell() {
 					get_meter_body().y + 2 * fudge,
 					screw_channel_height + 1
 				], center=true);
-			lip();
+			lip(truncate_inner=false);
 		}
 	}
 
