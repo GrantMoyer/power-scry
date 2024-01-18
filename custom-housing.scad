@@ -4,13 +4,13 @@ $fs = 0.4;
 use <power-strip.scad>
 use <meter.scad>
 
+fudge = 0.5;
+
 box_width = 100;
 box_thickness = 2;
-box_height = get_meter_bounds().z + 2 * box_thickness - get_bezel().z;
+box_height = get_meter_bounds().z + 2 * box_thickness - get_bezel().z + fudge;
 box_radius = 8;
 box_edge_radius = 1;
-
-fudge = 0.5;
 
 collar_inner_size = [13.5, 9.5];
 collar_outer_size = [16, 13];
