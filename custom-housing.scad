@@ -14,9 +14,9 @@ box_edge_radius = 1;
 
 collar_inner_size = [13.5, 9.5];
 collar_outer_size = [16, 13];
-collar_inner_radius = 1.5;
-collar_outer_radius = 2.5;
-collar_widths = [2, 2, 2];
+collar_inner_radius = 2.5;
+collar_outer_radius = 1.5;
+collar_widths = [1.4, 2.6, 1.4];
 
 collar_size = collar_inner_size + 4 * [box_thickness, box_thickness];
 collar_radius = collar_outer_radius + box_thickness;
@@ -226,7 +226,7 @@ module strain_relief_collar_cutout() {
 	rotate([-90, 0, 0]) {
 		linear_extrude(sum(collar_widths) + 1, center=true)
 			rounded_square(collar_inner_size + collar_fudge, r=collar_inner_radius, center=true);
-		linear_extrude(collar_widths[1] + 2 * fudge, center=true)
+		linear_extrude(collar_widths[1], center=true)
 			rounded_square(collar_outer_size + collar_fudge, r=collar_outer_radius, center=true);
 	}
 }
